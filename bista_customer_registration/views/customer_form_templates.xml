@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <template id="customer_apply" name="Customer Registration Page">
+        <t t-call="website.layout">
+            <div class="container py-5 o-vendor-form">
+                <!-- Title -->
+                <div class="text-center mb-5">
+                    <h1 class="display-6 fw-semibold mb-2">Customer Registration</h1>
+                    <p class="text-muted">Please complete all required fields (<span class="text-danger">*</span>).
+                    </p>
+                </div>
+
+                <form action="/customer/submit" method="post" enctype="multipart/form-data" class="needs-validation">
+                    <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+
+                    <!-- SECTION 1 -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header py-3" style="background: #cfffda; font-weight: bold;">
+                            <h5 class="m-0">Step 1: Registration</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Registered Legal Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="legal_name" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Trading Name (if different)</label>
+                                    <input class="form-control" name="trading_name"/>
+                                </div>
+
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Company Registration/VAT Number
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="company_reg_no" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">
+                                        Type of Business
+                                    </label>
+                                    <select class="form-select" name="business_type">
+                                        <option value="">-- Select --</option>
+                                        <t t-foreach="business_types" t-as="bt">
+                                            <option t-att-value="bt[0]">
+                                                <t t-esc="bt[1]"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Website</label>
+                                    <input class="form-control" name="website_url" placeholder="https://"/>
+                                </div>
+
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Country</label>
+                                    <select class="form-select" name="country">
+                                        <option value="">-- Select --</option>
+                                        <t t-foreach="country_ids" t-as="ct">
+                                            <option t-att-value="ct.id">
+                                                <t t-esc="ct.name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 2 -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header py-3" style="background: #cfffda; font-weight: bold;">
+                            <h5 class="m-0">Step 2: Contact Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="card-header py-3" style="background: #e9f8fd; font-weight: bold">
+                                    Main Address
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Applicant Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" type="email" name="applicant_email" required="1"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="left">
+                                            <label class="form-label">Applicant Phone
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="applicant_phone" required="1"/>
+                                        </div>
+                                        <div class="col-md-12" data-animate="left">
+                                            <label class="form-label">Street</label>
+                                            <input class="form-control" name="street"
+                                                   placeholder="e.g., Company / Individual"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">City</label>
+                                            <input class="form-control" name="city"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">State<span class="text-danger">*</span></label>
+                                            <select class="form-select" name="state" required="1">
+                                                <option value="0">-- Select --</option>
+                                                <t t-foreach="state_ids" t-as="st">
+                                                    <option t-att-value="st.id">
+                                                        <t t-esc="st.name"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">ZIP</label>
+                                            <input class="form-control" name="zip"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Country</label>
+                                            <select class="form-select" name="country">
+                                                <option value="">-- Select --</option>
+                                                <t t-foreach="country_ids" t-as="ct">
+                                                    <option t-att-value="ct.id">
+                                                        <t t-esc="ct.name"/>
+                                                    </option>
+                                                </t>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr/>
+                            <div class="row g-4">
+                                <div class="card-header py-3" style="background: #e9f8fd; font-weight: bold;">
+                                    Primary Contact (Finance/Admin)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-6" data-animate="left">
+                                            <label class="form-label">Name</label>
+                                            <input class="form-control" name="finance_name"
+                                                   placeholder="e.g., Company / Individual"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Position</label>
+                                            <input class="form-control" name="finance_position"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="left">
+                                            <label class="form-label">Email</label>
+                                            <input class="form-control" name="finance_email"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Phone Number</label>
+                                            <input class="form-control" name="finance_phone"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr/>
+                            <div class="row g-4">
+                                <div class="card-header py-3" style="background: #e9f8fd; font-weight: bold;">
+                                    Primary Contact (Operational)
+                                </div>
+                                <div class="card-body">
+                                    <div class="row g-4">
+                                        <div class="col-md-6" data-animate="left">
+                                            <label class="form-label">Name</label>
+                                            <input class="form-control" name="operational_name"
+                                                   placeholder="e.g., Company / Individual"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Position</label>
+                                            <input class="form-control" name="operational_position"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="left">
+                                            <label class="form-label">Email</label>
+                                            <input class="form-control" name="operational_email"/>
+                                        </div>
+                                        <div class="col-md-6" data-animate="right">
+                                            <label class="form-label">Phone Number</label>
+                                            <input class="form-control" name="operational_phone"/>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 3 -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header py-3" style="background: #cfffda; font-weight: bold;">
+                            <h5 class="m-0">Step 3: Financial &amp; Banking Details</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Bank Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="bank_name" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">SWIFT / BIC Code
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="swift_bic" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">IBAN / Account Number
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="iban_account" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Account Name
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="account_name" required="1"/>
+                                </div>
+
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Account Currency</label>
+                                    <select class="form-select" name="account_currency">
+                                        <option value="">-- Select --</option>
+                                        <t t-foreach="currency_ids" t-as="cr">
+                                            <option t-att-value="cr.id">
+                                                <t t-esc="cr.full_name + ' - ' +  cr.name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Bank Country</label>
+                                    <select class="form-select" name="bank_country">
+                                        <option value="">-- Select --</option>
+                                        <t t-foreach="country_ids" t-as="ct">
+                                            <option t-att-value="ct.id">
+                                                <t t-esc="ct.name"/>
+                                            </option>
+                                        </t>
+                                    </select>
+                                </div>
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Payment Conditions
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="payment_condition" required="1"/>
+                                </div>
+
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Price List Discount*
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" name="price_list_discount" required="1"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SECTION 4 -->
+                    <div class="card section-card mb-4 shadow-sm">
+                        <div class="card-header py-3" style="background: #cfffda; font-weight: bold;">
+                            <h5 class="m-0">Step 4: Required Documents Checklist</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-4">
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Certificate of Incorporation / Business Registration
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" type="file" name="doc_certificate_incorp"
+                                           accept=".pdf,.jpg,.jpeg,.png" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">Proof of Bank Account (e.g., IBAN Consult)
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <input class="form-control" type="file" name="doc_bank_proof"
+                                           accept=".pdf,.jpg,.jpeg,.png" required="1"/>
+                                </div>
+                                <div class="col-md-6" data-animate="left">
+                                    <label class="form-label">Signed Master Agreement / Framework</label>
+                                    <input class="form-control" type="file" name="doc_master_agreement"
+                                           accept=".pdf,.jpg,.jpeg,.png"/>
+                                </div>
+                                <div class="col-md-6" data-animate="right">
+                                    <label class="form-label">KYC Form / Company Financial Structure</label>
+                                    <input class="form-control" type="file" name="doc_kyc_form"
+                                           accept=".pdf,.jpg,.jpeg,.png"/>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit -->
+                    <div class="text-center">
+                        <button class="btn btn-primary btn-lg px-5 shadow lift-on-hover" type="submit">
+                            Submit
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </t>
+    </template>
+</odoo>

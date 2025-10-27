@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+        <record id="mail_template_supplier_submitted" model="mail.template">
+            <field name="name">Supplier Registration Submitted</field>
+            <field name="model_id" ref="crm.model_crm_lead"/>
+            <field name="subject">New Supplier Registration Submitted</field>
+            <field name="email_to"/>
+            <field name="body_html" type="html">
+                <t t-set="lead_name" t-value="object.legal_name or ''"/>
+                <t t-set="reference_no" t-value="object.reference_no or ''"/>
+                <t t-set="business_type" t-value="object.business_type or ''"/>
+                <t t-set="menu_id" t-value="env.context.get('menu_id', 0)"/>
+                <t t-set="action_id" t-value="env.context.get('action_id', 0)"/>
+                <t t-set="view_id" t-value="env.context.get('view_id', 0)"/>
+
+                <table border="0" cellpadding="0" cellspacing="0" style="padding-top: 16px; background-color: #F1F1F1; font-family:Verdana, Arial,sans-serif; color: #454748; width: 100%; border-collapse:separate;">
+                    <tr><td align="center">
+                        <table border="0" cellpadding="0" cellspacing="0" width="590" style="padding: 16px; background-color: white; color: #454748; border-collapse:separate;">
+                            <!-- HEADER -->
+                            <tr>
+                                <td align="center" style="min-width: 590px;">
+                                    <span style="font-size: 20px; font-weight: bold;">Supplier Registration</span>
+                                    <hr width="100%" style="background-color:rgb(204,204,204);border:none;min-height:1px;line-height:0;margin:16px 0px;"/>
+                                </td>
+                            </tr>
+                            <!-- CONTENT -->
+                            <tr>
+                                <td valign="top" style="font-size: 13px;">
+                                    <div>
+                                        <p>Dear Operational Team,</p>
+                                        <p>A new supplier registration has been submitted:</p>
+                                        <ul>
+                                            <li><b>Supplier Name:</b> <t t-out="lead_name"/></li>
+                                            <li><b>Reference No:</b> <t t-out="reference_no"/></li>
+                                            <li><b>Business Type:</b> <t t-out="business_type"/></li>
+                                        </ul>
+                                        <p>Please review and approve it in the system.</p>
+
+                                        <div style="margin: 16px 0px; text-align: center;">
+                                            <a t-att-href="'/web#id=%d&amp;view_type=form&amp;model=crm.lead&amp;menu_id=%d&amp;action=%d&amp;view_id=%d' % (
+                                                    object.id,
+                                                    menu_id,
+                                                    action_id,
+                                                    view_id
+                                                )"
+                                                style="display: inline-block; padding: 10px; text-decoration: none; font-size: 12px; background-color: #875A7B; color: #fff; border-radius: 5px;">
+                                                <strong>Open Supplier Request in Odoo</strong>
+                                            </a>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            <!-- FOOTER -->
+                            <tr>
+                                <td align="center" style="font-size: 11px; opacity: 0.7; text-align:center; padding-top: 16px;">
+                                    Powered by <a target="_blank" href="https://www.odoo.com" style="color: #875A7B;">Odoo</a>
+                                </td>
+                            </tr>
+                        </table>
+                    </td></tr>
+                </table>
+            </field>
+            <field name="lang">{{ object.partner_id.lang }}</field>
+        </record>
+
+    </data>
+</odoo>

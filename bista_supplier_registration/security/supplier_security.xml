@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Base category -->
+    <record id="supplier_registration_category" model="ir.module.category">
+        <field name="name">Supplier Registration</field>
+        <field name="sequence">10</field>
+    </record>
+
+    <!-- Operations group -->
+    <record id="group_supplier_ops" model="res.groups">
+        <field name="name">Supplier Operations</field>
+        <field name="category_id" ref="supplier_registration_category"/>
+    </record>
+
+    <!-- Finance group (includes Operations rights) -->
+    <record id="group_supplier_finance" model="res.groups">
+        <field name="name">Supplier Finance</field>
+        <field name="category_id" ref="supplier_registration_category"/>
+        <field name="implied_ids" eval="[(4, ref('group_supplier_ops'))]"/>
+    </record>
+    
+    </data>
+</odoo>

@@ -1,0 +1,7 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_corporate_travel_user,access_corporate_travel_user,bista_expense_management.model_corporate_travel,base.group_user,1,1,1,1
+access_corporate_travel_line_user,access_corporate_travel_line_user,bista_expense_management.model_corporate_travel_line,base.group_user,1,1,1,1
+access_travel_expense_category,access_travel_expense_category,bista_expense_management.model_travel_expense_category,base.group_user,1,1,1,1
+access_travel_reject_wizard,travel.reject.wizard,model_travel_reject_wizard,base.group_user,1,1,1,1
+access_travel_diem_expense_wizard,travel.diem.expense.wizard,model_travel_diem_expense_wizard,base.group_user,1,1,1,1
+access_travel_diem_expense_wizard_line,travel.diem.expense.wizard.line,model_travel_diem_expense_wizard_line,base.group_user,1,1,1,1

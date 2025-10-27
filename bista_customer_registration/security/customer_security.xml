@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Base category -->
+        <record id="customer_registration_category" model="ir.module.category">
+            <field name="name">Customer Registration</field>
+            <field name="sequence">11</field>
+        </record>
+
+        <!-- Operations group -->
+        <record id="group_customer_finance" model="res.groups">
+            <field name="name">Customer Finance</field>
+            <field name="category_id" ref="customer_registration_category"/>
+        </record>
+
+        <!-- Finance group (includes Operations rights) -->
+        <record id="group_customer_commercial" model="res.groups">
+            <field name="name">Customer Commercial</field>
+            <field name="category_id" ref="customer_registration_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_customer_finance'))]"/>
+        </record>
+
+        <record id="group_customer_accounts" model="res.groups">
+            <field name="name">Customer Accounts</field>
+            <field name="category_id" ref="customer_registration_category"/>
+            <field name="implied_ids" eval="[(4, ref('group_customer_commercial'))]"/>
+        </record>
+
+
+    </data>
+</odoo>

@@ -1,0 +1,36 @@
+# -*- encoding: utf-8 -*-
+{
+    'name': "Bista Supplier Registration",
+    'summary': """ Bista Supplier Registration (Zenter) """,
+    'description': """ Collections of unavailable fields for supplier registration (Zenter) """,
+    'author': "Bista Solutions",
+    'category': 'CRM',
+    'version': '18.0.1.0.0',
+    'sequence': 1,
+    'license': 'LGPL-3',
+    'depends': ['base', 'account', 'crm', 'website', 'purchase', 'bista_contact_customization'],
+    'data': [
+        "security/ir.model.access.csv",
+        "security/supplier_security.xml",
+        'data/data.xml',
+        'data/mail_template_ops_supplier_reg.xml',
+        'data/mail_template_finance_supplier_reg.xml',
+        'data/mail_template_contact_supplier_reg.xml',
+        'views/crm_lead_views.xml',
+        'views/res_partner_views.xml',
+        "views/vendor_form_templates.xml",
+        "views/auth_signup_inherit.xml",
+        "views/purchase_order_view.xml",
+        "wizard/supplier_reject_wizard_views.xml",
+    ],
+    'installable': True,
+    'auto_install': False,
+    "application": True,
+    "assets": {
+        "web.assets_frontend": [
+            "bista_supplier_registration/static/src/scss/signup_choice.scss",
+            "bista_supplier_registration/static/src/js/signup_choice.js",
+            # "bista_supplier_registration/static/src/xml/vendor_form_animator.xml",
+        ],
+    },
+}

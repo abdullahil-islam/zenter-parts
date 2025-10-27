@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="customer_action_contacts" model="ir.actions.act_window">
+        <field name="name">Registered customers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form,activity</field>
+        <field name="domain">[('is_registered_customer', '=', True)]</field>
+        <field name="search_view_id" ref="base.view_res_partner_filter"/>
+        <field name="context">{'default_is_company': True, 'create': 0}</field>
+    </record>
+
+    <!-- This Menu Item must have a parent and an action -->
+    <menuitem id="menu_registered_customers" parent="bista_customer_registration.menu_customer_register_root"
+              action="bista_customer_registration.customer_action_contacts" sequence="21"/>
+
+    <record id="bista_customer_registration.menu_registered_customers" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_customer_registration.group_customer_finance'),
+            ref('bista_customer_registration.group_customer_commercial'),
+            ref('bista_customer_registration.group_customer_accounts')])]"/>
+    </record>
+</odoo>

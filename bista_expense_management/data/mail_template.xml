@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="mail_template_travel_submitted" model="mail.template">
+        <field name="name">Corporate Travel Submitted</field>
+        <field name="email_from">${(user.email or '')|safe}</field>
+        <field name="subject">Travel Request: ${object.name}</field>
+        <field name="model_id" ref="model_corporate_travel"/>
+        <field name="body_html"><![CDATA[
+      <p>Dear ${object.user_id.name},</p>
+      <p>A travel request ${object.name} has been submitted and requires your action.</p>
+      <p><a href="/web#id=${object.id}&model=corporate.travel">Open Request</a></p>
+    ]]></field>
+    </record>
+</odoo>

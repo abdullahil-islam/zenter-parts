@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_partner_form_supplier_inherit" model="ir.ui.view">
+        <field name="name">view.supplier.res.partner.form.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <notebook position="inside">
+                <page string="Supplier" name="supplier">
+                    <group name="supplier_group">
+                        <!-- Trading & Business Info -->
+                        <group string="Registration Info" name="business_info" priority="1">
+                            <field name="name"/>
+                            <field name="trading_name"/>
+                            <field name="vat"/>
+                            <field name="business_type"/>
+                            <field name="website"/>
+                            <field name="child_ids" widget="many2many_tags" string="Primary Contacts"/>
+                        </group>
+                        <!-- Documents -->
+                        <group string="Documents" name="documents" priority="2">
+                            <field name="incorporation_certificate"/>
+                            <field name="bank_proof"/>
+                            <field name="master_agreement"/>
+                            <field name="kyc_form"/>
+                            <field name="annual_report"/>
+                            <field name="insurance_certificates"/>
+                            <field name="other_documents"/>
+                        </group>
+                    </group>
+                </page>
+            </notebook>
+        </field>
+    </record>
+
+    <record id="supplier_action_contacts" model="ir.actions.act_window">
+        <field name="name">Registered Suppliers</field>
+        <field name="res_model">res.partner</field>
+        <field name="view_mode">kanban,list,form,activity</field>
+        <field name="domain">[('is_registered_supplier', '=', True)]</field>
+        <field name="search_view_id" ref="base.view_res_partner_filter"/>
+        <field name="context">{'default_is_company': True, 'create': 0}</field>
+    </record>
+
+    <!-- This Menu Item must have a parent and an action -->
+    <menuitem id="menu_registered_suppliers" parent="bista_supplier_registration.menu_supplier_register_root"
+              action="bista_supplier_registration.supplier_action_contacts" sequence="20"/>
+
+    <record id="bista_supplier_registration.menu_registered_suppliers" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_supplier_registration.group_supplier_ops'),
+            ref('bista_supplier_registration.group_supplier_finance')])]"/>
+    </record>
+</odoo>

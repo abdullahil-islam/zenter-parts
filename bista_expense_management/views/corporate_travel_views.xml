@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_corporate_travel_form" model="ir.ui.view">
+        <field name="name">corporate.travel.form</field>
+        <field name="model">corporate.travel</field>
+        <field name="arch" type="xml">
+            <form string="Corporate Travel">
+                <header>
+                    <button name="action_submit" string="Submit for Approval" type="object" class="btn-primary"
+                            invisible="state != 'draft'"/>
+                    <button name="action_approve_md" string="Approve" type="object" class="btn-primary"
+                            invisible="state != 'md_approval'" groups="base.group_system,bista_expense_management.group_md"/>
+                    <button name="action_reject_md" string="Reject" type="object" class="btn-danger"
+                            invisible="state != 'md_approval'" groups="base.group_system,bista_expense_management.group_md"/>
+                    <button name="action_approve_fd" string="Approve" type="object" class="btn-primary"
+                            invisible="state != 'fd_approval'" groups="base.group_system,bista_expense_management.group_fd"/>
+                    <button name="action_reject_fd" string="Reject" type="object" class="btn-danger"
+                            invisible="state != 'fd_approval'" groups="base.group_system,bista_expense_management.group_fd"/>
+                    <field name="state" widget="statusbar"/>
+                </header>
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_expense_sheets" type="object" class="oe_stat_button" 
+                            icon="fa-file-text-o" invisible="state != 'approved'">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Expense Reports</span>
+                            </div>
+                        </button>
+                    </div>
+                    
+                    <group>
+                        <field name="name" readonly="1"/>
+                        <field name="employee_id" readonly="1" groups="bista_expense_management.group_travel_user"/>
+                        <field name="employee_id" groups="bista_expense_management.group_md,bista_expense_management.group_fd,base.group_system"/>
+                        <field name="department_id" readonly="1"/>
+                        <field name="job_id" readonly="1"/>
+                    </group>
+                    <group>
+                        <field name="phone" readonly="1"/>
+                        <field name="email" readonly="1"/>
+                        <field name="destination" required="1"/>
+                        <field name="departure_datetime" required="1"/>
+                        <field name="return_datetime" required="1"/>
+                    </group>
+                    <notebook>
+                        <page string="Estimated Costs">
+                            <button name="action_add_meals" string="Add Meals" type="object" class="btn-link"/>
+                            <field name="line_ids" readonly="state in ['approve', 'rejected']">
+                                <list editable="bottom">
+                                    <field name="product_id" readonly="is_meal_line == True"/>
+                                    <field name="description"/>
+                                    <field name="payment_mode"/>
+                                    <field name="vendor_id" readonly="payment_mode != 'company_account'"/>
+                                    <field name="is_meal_line" column_invisible="1"/>
+                                    <field name="estimated_amount" readonly="is_meal_line == True"/>
+                                </list>
+                            </field>
+                        </page>
+                        <page string="Rejection Note" name='reject_info' invisible="state in ['draft','approved']">
+                            <group>
+                                <field name="md_rejection_reason" readonly="1" string="Managing Director Rejection Reason"/>
+                                <field name="fd_rejection_reason" readonly="1" string="Finance Director Rejection Reason"/>
+                            </group>
+                        </page>
+                    </notebook>
+                    <group class="oe_subtotal_footer" colspan="2" name="expense_total">
+                        <field name="total_estimated_amount" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                    </group>
+                </sheet>
+                <div class="o_attachment_preview o_center_attachment"/>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_corporate_travel_tree" model="ir.ui.view">
+        <field name="name">corporate.travel.tree</field>
+        <field name="model">corporate.travel</field>
+        <field name="arch" type="xml">
+            <list string="Corporate Travels">
+                <field name="name"/>
+                <field name="employee_id"/>
+                <field name="destination"/>
+                <field name="state"/>
+                <field name="total_estimated_amount"/>
+            </list>
+        </field>
+    </record>
+
+    <record id="action_corporate_travel_tree" model="ir.actions.act_window">
+        <field name="name">Travel Requests</field>
+        <field name="res_model">corporate.travel</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <menuitem id="menu_corporate_travel_root" name="Corporate Travel" parent="hr_expense.menu_hr_expense_root"
+              sequence="95"/>
+    <menuitem id="menu_corporate_travel" name="Travel Requests" parent="menu_corporate_travel_root"
+              action="action_corporate_travel_tree"/>
+
+<!--    Provide Group permission to the menuitems-->
+    <record id="bista_expense_management.menu_corporate_travel_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_expense_management.group_travel_user'),
+            ref('bista_expense_management.group_md'),
+            ref('bista_expense_management.group_fd')])]"/>
+    </record>
+
+    <record id="bista_expense_management.menu_corporate_travel" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_expense_management.group_travel_user'),
+            ref('bista_expense_management.group_md'),
+            ref('bista_expense_management.group_fd')])]"/>
+    </record>
+</odoo>

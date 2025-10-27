@@ -1,0 +1,12 @@
+/* supplier_signup_flow/static/src/scss/signup_choice.scss */
+.ssf-blocker {
+  position: fixed;
+  inset: 0;
+  background: rgba(33, 37, 41, 0.4); /* subtle dark overlay */
+  backdrop-filter: blur(1px);
+  z-index: 1040; /* under Bootstrap modal (1050), above page */
+}
+
+#ssfSignupChoiceModal .modal-content {
+  border-radius: 0.75rem;
+}

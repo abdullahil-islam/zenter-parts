@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- list View -->
+    <record id="view_customer_register_tree" model="ir.ui.view">
+        <field name="name">crm.lead.customer.register.list</field>
+        <field name="model">crm.lead</field>
+        <field name="priority" eval="200"/>
+        <field name="arch" type="xml">
+            <list>
+                <field name="reference_no"/>
+                <field name="legal_name"/>
+                <field name="vat"/>
+                <field name="website"/>
+                <field name="customer_state" widget="badge"
+                       decoration-info="customer_state in ['finance', 'commercial', 'accounts']"
+                       decoration-success="customer_state=='approved'"
+                       decoration-danger="customer_state=='rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_customer_register_form" model="ir.ui.view">
+        <field name="name">crm.lead.customer.register.form</field>
+        <field name="model">crm.lead</field>
+        <field name="priority" eval="200"/>
+        <field name="arch" type="xml">
+            <form string="customer Register">
+                <header>
+                    <field name="customer_state" widget="statusbar"
+                           statusbar_visible="finance,commercial,accounts,approved"/>
+
+                    <button name="action_set_commercial_customer" type="object" class="oe_highlight"
+                            string="Send to Commercial"
+                            invisible="customer_state not in ['finance']"
+                            groups="bista_customer_registration.group_customer_finance"/>
+                    <button name="action_set_accounts_customer" type="object" class="oe_highlight"
+                            string="Send to Accounts"
+                            invisible="customer_state not in ['commercial']"
+                            groups="bista_customer_registration.group_customer_commercial"/>
+                    <button name="action_approve_customer" type="object" class="oe_highlight" string="Approve"
+                            invisible="customer_state not in ['accounts']"
+                            groups="bista_customer_registration.group_customer_accounts"/>
+                    <button name="action_reject_customer" type="object" class="oe_highlight" string="Reject"
+                            invisible="customer_state not in ['commercial','finance','accounts']"
+                            groups="bista_customer_registration.group_customer_finance,bista_customer_registration.group_customer_commercial,bista_customer_registration.group_customer_accounts"/>
+                    <button name="action_reset_to_finance_customer" class="oe_highlight" type="object"
+                            string="Reset to Finance" invisible="customer_state not in ['rejected']"/>
+
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_customer" type="object" class="oe_stat_button" icon="fa-user"
+                                invisible="customer_state != 'approved'">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Customer</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title mb-auto">
+                        <h1>
+                            <field name="reference_no" placeholder="customer Reference No"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <!-- Registration Info -->
+                        <group string="Registration Info">
+                            <field name="name" invisible="1"/>
+                            <field name="legal_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="trading_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="vat" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="business_type" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="phone" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="email_from" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <label for="supplier_street_page_lead" string="Main Address"/>
+                            <div class="o_address_format">
+                                <field name="street" id="supplier_street_page_lead" placeholder="Street..."
+                                       class="o_address_street" readonly="customer_state in ['approved', 'locked']"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"
+                                       readonly="customer_state in ['approved', 'locked']"/>
+                                <field name="city" placeholder="City" class="o_address_city"
+                                       readonly="customer_state in ['approved', 'locked']"/>
+                                <field name="state_id" class="o_address_state" placeholder="customer_state"
+                                       options='{"no_open": True}' readonly="customer_state in ['approved', 'locked']" required="1"/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"
+                                       readonly="customer_state in ['approved', 'locked']"/>
+                                <field name="country_id" placeholder="Country" class="o_address_country"
+                                       options='{"no_open": True, "no_create": True}'
+                                       readonly="customer_state in ['approved', 'locked']"/>
+                            </div>
+                            <field name="website" widget="url" placeholder="e.g. https://www.odoo.com"
+                                   readonly="customer_state in ['approved', 'locked']"/>
+                        </group>
+
+                        <!-- Financial & Banking Details -->
+                        <group string="Financial and Banking Details">
+                            <field name="bank_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="bic" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="bank_country" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="acc_number" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="acc_holder_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="currency_id" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="supplier_invoice_currency_id"
+                                   readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="payment_condition" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="price_list_discount" readonly="customer_state in ['approved', 'locked']"/>
+                        </group>
+                        <!--                        <group string="Contact Info">-->
+                        <!--                            <field name="customer_contact_name" readonly="customer_state == 'approved' "/>-->
+                        <!--                            <field name="customer_contact_phone" readonly="customer_state == 'approved' "/>-->
+                        <!--                            <field name="customer_contact_email" readonly="customer_state == 'approved' "/>-->
+                        <!--                            <field name="user_id" widget="many2one_avatar_user" domain="[('share', '=', False)]" class="ms-auto" readonly="customer_state == 'approved' "/>-->
+                        <!--                        </group>-->
+                    </group>
+
+                    <group>
+                        <group string="Primary Contact (Finance/Admin)">
+                            <field name="finance_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="finance_phone" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="finance_email" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="finance_position" readonly="customer_state in ['approved', 'locked']"/>
+                        </group>
+                        <group string="Primary Contact (Operational)">
+                            <field name="operational_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="operational_phone" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="operational_email" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="operational_position" readonly="customer_state in ['approved', 'locked']"/>
+                        </group>
+                    </group>
+
+                    <!-- Required Documents -->
+                    <group string="Required Documents" groups="bista_customer_registration.group_customer_finance">
+                        <group>
+                            <field name="incorporation_certificate" filename="incorporation_certificate_filename"
+                                   readonly="customer_state in ['approved']"/>
+                            <field name="incorporation_certificate_filename" invisible="1"/>
+
+                            <field name="master_agreement" filename="master_agreement_filename"
+                                   readonly="customer_state in ['approved']"/>
+                            <field name="master_agreement_filename" invisible="1"/>
+
+                            <field name="other_documents" filename="other_documents_filename"
+                                   readonly="customer_state in ['approved']"/>
+                            <field name="other_documents_filename" invisible="1"/>
+                        </group>
+
+                        <group>
+                            <field name="bank_proof" filename="bank_proof_filename"
+                                   readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="bank_proof_filename" invisible="1"/>
+
+                            <field name="kyc_form" filename="kyc_form_filename"
+                                   readonly="customer_state in ['approved']"/>
+                            <field name="kyc_form_filename" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Extra Info" name='extra_info'>
+                            <group>
+                                <field name="extra_documents" filename="extra_documents_filename"
+                                       readonly="customer_state in ['approved']"/>
+                                <field name="extra_documents_filename" invisible="1"/>
+                                <field name="extra_info" readonly="customer_state in ['approved']"/>
+                            </group>
+                        </page>
+                        <page string="Rejection Note" name='reject_info' invisible="customer_state == 'approved' ">
+                            <group>
+                                <field name="rejection_reason" readonly="customer_state in ['approved']"/>
+                            </group>
+                        </page>
+                    </notebook>
+
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_customer_register" model="ir.actions.act_window">
+        <field name="name">customer Applications</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_customer_reg', '=', True)]</field>
+        <field name="context">{'is_customer_reg': True}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'list', 'view_id': ref('bista_customer_registration.view_customer_register_tree')}),
+        (0, 0, {'view_mode': 'form', 'view_id': ref('bista_customer_registration.view_customer_register_form')})
+    ]"/>
+    </record>
+
+    <!-- Parent Menu (Top-level app like CRM) -->
+    <menuitem id="menu_customer_register_root"
+              name="Customer Register"
+              web_icon="bista_customer_registration,static/description/customer_icon.png"
+              sequence="11"/>
+
+    <!-- First Child Menu -->
+    <menuitem id="menu_customer_register_main"
+              name="Customer Records"
+              parent="menu_customer_register_root"
+              action="action_customer_register"
+              sequence="11"/>
+
+    <record id="bista_customer_registration.menu_customer_register_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_customer_registration.group_customer_finance'),
+            ref('bista_customer_registration.group_customer_commercial'),
+            ref('bista_customer_registration.group_customer_accounts')])]"/>
+    </record>
+
+    <record id="bista_customer_registration.menu_customer_register_main" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_customer_registration.group_customer_finance'),
+            ref('bista_customer_registration.group_customer_commercial'),
+            ref('bista_customer_registration.group_customer_accounts')])]"/>
+    </record>
+</odoo>

@@ -1,0 +1,40 @@
+<odoo>
+    <!-- Wizard Form View -->
+    <record id="view_travel_diem_expense_wizard_form" model="ir.ui.view">
+        <field name="name">travel.diem.expense.wizard.form</field>
+        <field name="model">travel.diem.expense.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Travel Diem Expense Wizard">
+                <sheet>
+                    <group>
+                        <field name="line_ids" nolabel="1">
+                            <list editable="bottom">
+                                <field name="product_id" readonly="1" force_save="1"/>
+                                <field name="qty" readonly="1" force_save="1"/>
+                                <field name="price" readonly="1" force_save="1"/>
+                                <field name="total_price" readonly="1" force_save="1"/>
+                            </list>
+                        </field>
+                    </group>
+                    <group class="oe_subtotal_footer" colspan="2" name="expense_cost">
+                        <field name="total_cost" widget="monetary"
+                               options="{'currency_field': 'currency_id'}"/>
+                    </group>
+
+                    <footer>
+                        <button string="Confirm" type="object" name="action_confirm" class="btn-primary"/>
+                        <button string="Cancel" class="btn-secondary" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Wizard Action -->
+    <record id="action_travel_diem_expense_wizard" model="ir.actions.act_window">
+        <field name="name">Travel Diem Expense Wizard</field>
+        <field name="res_model">travel.diem.expense.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+</odoo>

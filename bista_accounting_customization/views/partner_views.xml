@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit Form View to Modify it -->
+    <record id="partner_views_inherit" model="ir.ui.view">
+        <field name="name">partner_views_inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting"/>
+            </xpath>
+
+        </field>
+    </record>
+</odoo>

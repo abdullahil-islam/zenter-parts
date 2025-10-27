@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+     <record id="action_travel_req_pending_approve" model="ir.actions.act_window">
+        <field name="name">Pending Approvals</field>
+        <field name="res_model">corporate.travel</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('state', 'in', ['md_approval','fd_approval'])]</field>
+        <field name="context">{}</field>
+    </record>
+
+    <menuitem id="menu_travel_req_pending_approve"
+        name="Pending Approvals"
+        parent="bista_expense_management.menu_corporate_travel_root"
+        sequence="10"
+        action="bista_expense_management.action_travel_req_pending_approve"/>
+
+    <record id="bista_expense_management.menu_travel_req_pending_approve" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_expense_management.group_md'),
+            ref('bista_expense_management.group_fd')])]"/>
+    </record>
+
+</odoo>

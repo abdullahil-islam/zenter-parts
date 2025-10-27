@@ -1,0 +1,32 @@
+/* Subtle, modern look & feel */
+.o-vendor-form .section-card {
+  border-radius: 1rem;
+  overflow: hidden;
+}
+.o-vendor-form .card-header {
+  /*background: linear-gradient(90deg, rgba(13,110,253,.1), rgba(13,110,253,.05));*/
+  background: #dff7ff;
+  border-bottom: 1px solid rgba(13,110,253,.15);
+}
+.lift-on-hover {
+  transition: transform .2s ease, box-shadow .2s ease;
+}
+.lift-on-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.08);
+}
+
+/* Slide-in animation (scroll/page load) using IntersectionObserver */
+@media (prefers-reduced-motion: no-preference) {
+  .o-vendor-form [data-animate] {
+    opacity: 0;
+    transform: translateX(var(--offset, 0));
+    transition: opacity .6s ease, transform .6s ease;
+  }
+  .o-vendor-form [data-animate="left"] { --offset: -28px; }
+  .o-vendor-form [data-animate="right"] { --offset: 28px; }
+  .o-vendor-form [data-animate].in-view {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}

@@ -1,0 +1,40 @@
+<!-- supplier_signup_flow/views/auth_signup_inherit.xml -->
+<odoo>
+    <!-- Inherit the standard signup template -->
+    <template id="signup_inherit_modal" inherit_id="auth_signup.signup" name="Signup Choice Modal Inherit">
+        <xpath expr="//form[@class='oe_signup_form']" position="after">
+            <!-- Page blocker to disable interactions until the user chooses -->
+<!--            <div id="ssf_blocker" class="ssf-blocker d-none"></div>-->
+
+            <!-- Choice Modal -->
+            <div class="modal fade" id="ssfSignupChoiceModal" tabindex="-1" aria-hidden="true" data-ssf-modal="1">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                        <div class="modal-header border-0">
+                            <h5 class="modal-title fw-semibold">Choose how you want to join</h5>
+                        </div>
+                        <div class="modal-body p-5">
+                            <p class="text-muted mb-4">Please select one option to continue.</p>
+                            <div class="d-grid gap-4">
+                                <a href="/vendor/apply" class="btn btn-outline-secondary btn-lg" id="ssf_btn_supplier">
+                                    Join as Supplier
+                                </a>
+                                <a href="/customer/apply" class="btn btn-outline-secondary btn-lg" id="ssf_btn_customer">
+                                    Join as Customer
+                                </a>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0">
+                            <small class="text-muted">You’ll see the supplier registration form after choosing
+                                Supplier.
+                            </small>
+                            <small class="text-muted">You’ll see the Customer registration form after choosing
+                                Customer.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </template>
+</odoo>

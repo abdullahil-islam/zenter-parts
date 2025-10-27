@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- list View -->
+    <record id="view_supplier_register_tree" model="ir.ui.view">
+        <field name="name">crm.lead.supplier.register.list</field>
+        <field name="model">crm.lead</field>
+        <field name="priority" eval="200"/>
+        <field name="arch" type="xml">
+            <list>
+                <field name="reference_no"/>
+                <field name="legal_name"/>
+                <field name="trading_name"/>
+                <field name="vat"/>
+                <field name="business_type"/>
+                <field name="website"/>
+                <field name="bank_name"/>
+                <field name="bic" optional="hide"/>
+                <field name="bank_country" optional="hide"/>
+                <field name="acc_number"/>
+                <field name="acc_holder_name" optional="hide"/>
+                <field name="state" widget="badge"
+                       decoration-info="state=='operation'"
+                       decoration-warning="state=='finance'"
+                       decoration-success="state=='approved'"
+                       decoration-danger="state=='rejected'"/>
+            </list>
+        </field>
+    </record>
+
+    <!-- Form View -->
+    <record id="view_supplier_register_form" model="ir.ui.view">
+        <field name="name">crm.lead.supplier.register.form</field>
+        <field name="model">crm.lead</field>
+        <field name="priority" eval="200"/>
+        <field name="arch" type="xml">
+            <form string="Supplier Register">
+                <header>
+                    <field name="state" widget="statusbar" statusbar_visible="operation,finance,approved"/>
+                    <button name="action_set_finance" type="object" class="oe_highlight" string="Send to Finance"
+                            invisible="state != 'operation'" groups="bista_supplier_registration.group_supplier_ops"/>
+                    <button name="action_approve" type="object" class="oe_highlight" string="Approve"
+                            invisible="state != 'finance'" groups="bista_supplier_registration.group_supplier_finance"/>
+                    <button name="action_reject" type="object" class="oe_highlight" string="Reject"
+                            invisible="state not in ['operation','finance']"/>
+                    <button name="action_reset_to_operation" class="oe_highlight" type="object"
+                            string="Reset to Operation" invisible="state != 'rejected'"
+                            groups="bista_supplier_registration.group_supplier_ops,bista_supplier_registration.group_supplier_finance"/>
+                    <button name="action_lock" class="oe_highlight" type="object"
+                            string="Mark as Locked" invisible="state != 'approved'"/>
+
+                </header>
+
+                <sheet>
+                    <div class="oe_button_box" name="button_box">
+                        <button name="action_open_partner" type="object" class="oe_stat_button" icon="fa-user"
+                                invisible="state not in ['approved', 'locked']">
+                            <div class="o_stat_info">
+                                <span class="o_stat_text">Supplier</span>
+                            </div>
+                        </button>
+                    </div>
+
+                    <div class="oe_title mb-auto">
+                        <h1>
+                            <field name="reference_no" placeholder="Supplier Reference No"/>
+                        </h1>
+                    </div>
+                    <group>
+                        <!-- Registration Info -->
+                        <group string="Registration Info">
+                            <field name="name" invisible="1"/>
+                            <field name="legal_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="trading_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="vat" readonly="state in ['approved', 'locked']"/>
+                            <field name="business_type" readonly="state in ['approved', 'locked']"/>
+                            <field name="phone" readonly="state in ['approved', 'locked']" required="1"/>
+                            <field name="email_from" readonly="state in ['approved', 'locked']" required="1"/>
+                            <label for="supplier_street_page_lead" string="Main Address"/>
+                            <div class="o_address_format">
+                                <field name="street" id="supplier_street_page_lead" placeholder="Street..."
+                                       class="o_address_street" readonly="state in ['approved', 'locked']"/>
+                                <field name="street2" placeholder="Street 2..." class="o_address_street"
+                                       readonly="state in ['approved', 'locked']"/>
+                                <field name="city" placeholder="City" class="o_address_city"
+                                       readonly="state in ['approved', 'locked']"/>
+                                <field name="state_id" class="o_address_state" placeholder="State"
+                                       options='{"no_open": True}' readonly="state in ['approved', 'locked']" required="1"/>
+                                <field name="zip" placeholder="ZIP" class="o_address_zip"
+                                       readonly="state in ['approved', 'locked']"/>
+                                <field name="country_id" placeholder="Country" class="o_address_country"
+                                       options='{"no_open": True, "no_create": True}'
+                                       readonly="state in ['approved', 'locked']"/>
+                            </div>
+                            <field name="website" widget="url" placeholder="e.g. https://www.odoo.com"
+                                   readonly="state in ['approved', 'locked']"/>
+                        </group>
+
+                        <!-- Financial & Banking Details -->
+                        <group string="Financial and Banking Details">
+                            <field name="bank_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="bic" readonly="state in ['approved', 'locked']"/>
+                            <field name="bank_country" readonly="state in ['approved', 'locked']"/>
+                            <field name="acc_number" readonly="state in ['approved', 'locked']"/>
+                            <field name="acc_holder_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="currency_id" readonly="state in ['approved', 'locked']"/>
+                            <field name="supplier_invoice_currency_id" readonly="state in ['approved', 'locked']"/>
+                            <field name="standard_payment_term" readonly="state in ['approved', 'locked']"/>
+                            <field name="payment_term_id" readonly="state in ['approved', 'locked']"/>
+                        </group>
+                    </group>
+
+                    <group>
+                        <group string="Primary Contact (Finance/Admin)">
+                            <field name="finance_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="finance_phone" readonly="state in ['approved', 'locked']"/>
+                            <field name="finance_email" readonly="state in ['approved', 'locked']"/>
+                            <field name="finance_position" readonly="state in ['approved', 'locked']"/>
+                        </group>
+                        <group string="Primary Contact (Operational)">
+                            <field name="operational_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="operational_phone" readonly="state in ['approved', 'locked']"/>
+                            <field name="operational_email" readonly="state in ['approved', 'locked']"/>
+                            <field name="operational_position" readonly="state in ['approved', 'locked']"/>
+                        </group>
+                    </group>
+
+                    <!-- Required Documents -->
+                    <group string="Required Documents" groups="bista_supplier_registration.group_supplier_finance">
+                        <group>
+                            <field name="incorporation_certificate" filename="incorporation_certificate_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="incorporation_certificate_filename" invisible="1"/>
+
+                            <field name="bank_proof" filename="bank_proof_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="bank_proof_filename" invisible="1"/>
+
+                            <field name="master_agreement" filename="master_agreement_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="master_agreement_filename" invisible="1"/>
+
+                            <field name="kyc_form" filename="kyc_form_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="kyc_form_filename" invisible="1"/>
+                        </group>
+
+                        <group>
+                            <field name="annual_report" filename="annual_report_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="annual_report_filename" invisible="1"/>
+
+                            <field name="insurance_certificates" filename="insurance_certificates_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="insurance_certificates_filename" invisible="1"/>
+
+                            <field name="other_documents" filename="other_documents_filename"
+                                   readonly="state in ['approved', 'locked']"/>
+                            <field name="other_documents_filename" invisible="1"/>
+                        </group>
+                    </group>
+
+                    <notebook>
+                        <page string="Extra Info" name='extra_info'>
+                            <group>
+                                <field name="extra_documents" filename="extra_documents_filename"
+                                       readonly="state in ['approved', 'locked']"/>
+                                <field name="extra_documents_filename" invisible="1"/>
+                                <field name="extra_info" readonly="state in ['approved', 'locked']"/>
+                            </group>
+                        </page>
+                        <page string="Rejection Note" name='reject_info' invisible="state == 'approved' ">
+                            <group>
+                                <field name="rejection_reason" readonly="state in ['approved', 'locked']"/>
+                            </group>
+                        </page>
+                    </notebook>
+                </sheet>
+                <chatter/>
+            </form>
+        </field>
+    </record>
+
+    <!-- Action -->
+    <record id="action_supplier_register" model="ir.actions.act_window">
+        <field name="name">Supplier Applications</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_supplier_reg', '=', True)]</field>
+        <field name="context">{'is_supplier_reg': True}</field>
+        <field name="view_ids" eval="[(5, 0, 0),
+        (0, 0, {'view_mode': 'list', 'view_id': ref('bista_supplier_registration.view_supplier_register_tree')}),
+        (0, 0, {'view_mode': 'form', 'view_id': ref('bista_supplier_registration.view_supplier_register_form')})
+    ]"/>
+    </record>
+
+    <!-- Parent Menu (Top-level app like CRM) -->
+    <menuitem id="menu_supplier_register_root"
+              name="Supplier Register"
+              web_icon="bista_supplier_registration,static/description/supplier_icon.png"
+              sequence="10"/>
+
+    <!-- First Child Menu -->
+    <menuitem id="menu_supplier_register_main"
+              name="Supplier Records"
+              parent="menu_supplier_register_root"
+              action="action_supplier_register"
+              sequence="10"/>
+
+    <record id="bista_supplier_registration.menu_supplier_register_root" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_supplier_registration.group_supplier_ops'),
+            ref('bista_supplier_registration.group_supplier_finance')])]"/>
+    </record>
+
+    <record id="bista_supplier_registration.menu_supplier_register_main" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_supplier_registration.group_supplier_ops'),
+            ref('bista_supplier_registration.group_supplier_finance')])]"/>
+    </record>
+</odoo>
