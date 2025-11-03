@@ -19,6 +19,12 @@ class CorporateTravelLine(models.Model):
     vendor_id = fields.Many2one('res.partner')
     is_meal_line = fields.Boolean(default=False)
 
+    @api.onchange('product_id')
+    def _compute_company_account(self):
+        for rec in self:
+            if rec.product_id.travel_exp_conf_id and rec.product_id.travel_exp_conf_id.type == 'other':
+                rec.payment_mode = 'own_account'
+
 
 class CorporateTravel(models.Model):
     _name = 'corporate.travel'
@@ -37,7 +43,7 @@ class CorporateTravel(models.Model):
     departure_datetime = fields.Datetime(tracking=True)
     return_datetime = fields.Datetime(tracking=True)
     currency_id = fields.Many2one('res.currency', default=lambda self: self.env.company.currency_id.id)
-    line_ids = fields.One2many('corporate.travel.line','travel_id', string='Estimated Costs')
+    line_ids = fields.One2many('corporate.travel.line','travel_id', string='Estimated Costs', copy=True)
     total_estimated_amount = fields.Monetary(compute='_compute_total', store=True, currency_field='currency_id')
     state = fields.Selection([
         ('draft', 'Draft'), ('md_approval', 'Managing Director'), ('fd_approval', 'Finance Director'),
@@ -46,6 +52,35 @@ class CorporateTravel(models.Model):
     md_rejection_reason = fields.Text(string='MD Rejection Reason', tracking=True)
     fd_rejection_reason = fields.Text(string='FD Rejection Reason', tracking=True)
     expense_sheet_ids = fields.Many2many('hr.expense.sheet', string='Created Expense Sheets')
+
+    advance_payment_id = fields.Many2one('account.payment', string='Advance Payment', readonly=True, copy=False)
+    advance_amount = fields.Monetary(string='Advance Amount', readonly=True, copy=False)
+    advance_state = fields.Selection([
+        ('none', 'No Advance'),
+        ('draft', 'Draft'),
+        ('paid', 'Paid'),
+        ('reconciled', 'Reconciled'),
+    ], string='Advance State', default='none', readonly=True, copy=False)
+
+    def action_open_advance_wizard(self):
+        """Return action to open advance payment wizard for this travel request."""
+        self.ensure_one()
+        ctx = dict(self.env.context or {})
+        default_amount = sum(self.line_ids.filtered(lambda x: x.product_id.travel_exp_type == 'other' and x.payment_mode == 'own_account').mapped('estimated_amount'))
+        ctx.update({
+            'default_travel_id': self.id,
+            'default_amount': default_amount or 0.0,  # adapt field name if needed
+            'default_partner_id': self.employee_id.user_id.partner_id.id,
+            'default_currency_id': self.currency_id.id or self.env.company.currency_id.id,
+        })
+        return {
+            'type': 'ir.actions.act_window',
+            'res_model': 'travel.advance.payment.wizard',
+            'view_mode': 'form',
+            'view_type': 'form',
+            'target': 'new',
+            'context': ctx,
+        }
 
     @api.model
     def _default_employee(self):
@@ -157,6 +192,9 @@ class CorporateTravel(models.Model):
                 'product_id': l.product_id.id if l.product_id else False,
                 'total_amount_currency': l.estimated_amount or 0.0,
                 'employee_id': self.employee_id.id,
+                'payment_mode': l.payment_mode,
+                'description': l.description,
+                'vendor_id': l.vendor_id.id,
                 # 'currency_id': l.currency_id.id or self.currency_id.id,
             }
             if t == 'po':
@@ -173,12 +211,13 @@ class CorporateTravel(models.Model):
             #     return self.env['hr.expense.sheet']
             sheet_vals = {'name': name, 'employee_id': self.employee_id.id}
             sheet = Sheet.create(sheet_vals)
+            sheet.write({'journal_id': sheet.payment_method_line_id.journal_id.id})
             for ln in lines:
                 ln_vals = dict(ln)
                 ln_vals.update({'sheet_id': sheet.id})
                 try:
                     Expense.create(ln_vals)
-                except Exception:
+                except Exception as e:
                     # fallback: try with minimal fields if model structure differs by Odoo version
                     try:
                         Expense.create({
@@ -186,7 +225,9 @@ class CorporateTravel(models.Model):
                             'sheet_id': sheet.id,
                             'total_amount_currency': ln_vals.get('total_amount_currency', 0.0),
                             'employee_id': ln_vals.get('employee_id'),
-                            # 'currency_id': ln_vals.get('currency_id')
+                            'payment_mode': ln_vals.get('payment_mode'),
+                            'description': ln_vals.get('description'),
+                            'vendor_id': ln_vals.get('vendor_id')
                         })
                     except Exception:
                         # swallow to avoid crash in mixed environments; report/log if needed

@@ -15,6 +15,7 @@
         'data/sequence_data.xml',
         'wizard/travel_reject_wizard_views.xml',
         'wizard/travel_diem_expense_wizard_views.xml',
+        'wizard/travel_advance_payment_wizard_views.xml',
         'views/menu.xml',
         'views/travel_expense_category_views.xml',
     ],

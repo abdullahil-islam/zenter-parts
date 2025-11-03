@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_travel_advance_payment_wizard_form" model="ir.ui.view">
+        <field name="name">travel.advance.payment.wizard.form</field>
+        <field name="model">travel.advance.payment.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Advance Payment">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="travel_id" readonly="1"/>
+                            <field name="partner_id"/>
+                            <field name="amount"/>
+                            <field name="payment_date"/>
+                            <field name="memo"/>
+                        </group>
+                        <group>
+                            <field name="currency_id"/>
+                            <field name="journal_id"/>
+                            <field name="payment_method_id"/>
+                            <!-- <field name="available_journal_ids"/> -->
+                            <!-- <field name="available_pay_method_ids"/> -->
+                        </group>
+                    </group>
+                    <footer>
+                        <button string="Confirm Payment" type="object" name="action_create_payment"
+                                class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>
