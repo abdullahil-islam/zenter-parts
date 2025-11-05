@@ -7,6 +7,7 @@
         <field name="inherit_id" ref="product.product_template_form_view"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='categ_id']" position="after">
+                <field name="oem_ids" widget="many2many_tags"/>
                 <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting" readonly="1"/>
             </xpath>
             <xpath expr="//field[@name='categ_id']" position="before">
@@ -22,5 +23,6 @@
         <field name="view_mode">kanban,form,list</field>
         <field name="domain">[('product_brand_id', '=', active_id)]</field>
     </record>
-    
+
+
 </odoo>

@@ -2,12 +2,11 @@
 {
     'name': "bista_accounting_customization",
 
-    'summary': "Short (1 phrase/line) summary of the module's purpose",
-
+    'summary': "Custom accounting enhancements and analytical features for Odoo",
     'description': """
-Long description of module's purpose
+        Provides custom accounting and analytical enhancements in Odoo,
+        including improved reports and integration with products, HR, and analytic accounting.
     """,
-
     'author': "My Company",
     'website': "https://www.yourcompany.com",
 
@@ -18,7 +17,7 @@ Long description of module's purpose
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'account', 'analytic', 'product', 'hr'],
+    'depends': ['base', 'account', 'analytic', 'product', 'hr', 'website_sale'],
 
     # always loaded
     'data': [
@@ -38,4 +37,3 @@ Long description of module's purpose
         ],
     }
 }
-

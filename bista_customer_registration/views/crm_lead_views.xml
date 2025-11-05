@@ -42,7 +42,7 @@
                             invisible="customer_state not in ['accounts']"
                             groups="bista_customer_registration.group_customer_accounts"/>
                     <button name="action_reject_customer" type="object" class="oe_highlight" string="Reject"
-                            invisible="customer_state not in ['commercial','finance','accounts']"
+                            invisible="can_reject_customer == False"/>
                             groups="bista_customer_registration.group_customer_finance,bista_customer_registration.group_customer_commercial,bista_customer_registration.group_customer_accounts"/>
                     <button name="action_reset_to_finance_customer" class="oe_highlight" type="object"
                             string="Reset to Finance" invisible="customer_state not in ['rejected']"/>
@@ -76,19 +76,19 @@
                             <field name="email_from" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <label for="supplier_street_page_lead" string="Main Address"/>
                             <div class="o_address_format">
-                                <field name="street" id="supplier_street_page_lead" placeholder="Street..."
+                                <field name="street" id="supplier_street_page_lead" placeholder="Street..." required="1"
                                        class="o_address_street" readonly="customer_state in ['approved', 'locked']"/>
                                 <field name="street2" placeholder="Street 2..." class="o_address_street"
                                        readonly="customer_state in ['approved', 'locked']"/>
-                                <field name="city" placeholder="City" class="o_address_city"
+                                <field name="city" placeholder="City" class="o_address_city" required="1"
                                        readonly="customer_state in ['approved', 'locked']"/>
-                                <field name="state_id" class="o_address_state" placeholder="customer_state"
+                                <field name="state_id" class="o_address_state" placeholder="customer_state" domain="[('id', 'in', allowed_state_ids)]"
                                        options='{"no_open": True}' readonly="customer_state in ['approved', 'locked']" required="1"/>
-                                <field name="zip" placeholder="ZIP" class="o_address_zip"
+                                <field name="zip" placeholder="ZIP" class="o_address_zip" required="1"
                                        readonly="customer_state in ['approved', 'locked']"/>
                                 <field name="country_id" placeholder="Country" class="o_address_country"
                                        options='{"no_open": True, "no_create": True}'
-                                       readonly="customer_state in ['approved', 'locked']"/>
+                                       readonly="customer_state in ['approved', 'locked']" required="1"/>
                             </div>
                             <field name="website" widget="url" placeholder="e.g. https://www.odoo.com"
                                    readonly="customer_state in ['approved', 'locked']"/>
@@ -101,7 +101,7 @@
                             <field name="bank_country" readonly="customer_state in ['approved', 'locked']"/>
                             <field name="acc_number" readonly="customer_state in ['approved', 'locked']"/>
                             <field name="acc_holder_name" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="currency_id" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="currency_id" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="supplier_invoice_currency_id"
                                    readonly="customer_state in ['approved', 'locked']"/>
                             <field name="payment_condition" readonly="customer_state in ['approved', 'locked']"/>
@@ -117,15 +117,15 @@
 
                     <group>
                         <group string="Primary Contact (Finance/Admin)">
-                            <field name="finance_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="finance_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="finance_phone" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="finance_email" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="finance_email" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="finance_position" readonly="customer_state in ['approved', 'locked']"/>
                         </group>
                         <group string="Primary Contact (Operational)">
-                            <field name="operational_name" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="operational_phone" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="operational_email" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="operational_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="operational_phone" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="operational_email" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="operational_position" readonly="customer_state in ['approved', 'locked']"/>
                         </group>
                     </group>
@@ -179,11 +179,28 @@
         </field>
     </record>
 
+    <!-- Search View for Supplier Register -->
+    <record id="view_customer_register_search" model="ir.ui.view">
+        <field name="name">crm.lead.customer.register.search</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <search string="Supplier Register">
+                <!-- Filters for state -->
+                <filter name="filter_financial" string="Financial" domain="[('customer_state','=','finance')]"/>
+                <filter name="filter_commercial" string="Commercial" domain="[('customer_state','=','commercial')]"/>
+                <filter name="filter_accounts" string="Accounts" domain="[('customer_state','=','accounts')]"/>
+                <filter name="filter_approved" string="Approved" domain="[('customer_state','=','approved')]"/>
+                <filter name="filter_rejected" string="Rejected" domain="[('customer_state','=','rejected')]"/>
+            </search>
+        </field>
+    </record>
+
     <!-- Action -->
     <record id="action_customer_register" model="ir.actions.act_window">
         <field name="name">customer Applications</field>
         <field name="res_model">crm.lead</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_customer_register_search"/>
         <field name="domain">[('is_customer_reg', '=', True)]</field>
         <field name="context">{'is_customer_reg': True}</field>
         <field name="view_ids" eval="[(5, 0, 0),

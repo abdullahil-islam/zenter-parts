@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_invoice_document_inherit" inherit_id="account.report_invoice_document">
+
+        <xpath expr="//p[@name='payment_communication']" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+        <xpath expr="//div[@id='informations']" position="attributes">
+            <attribute name="class">d-none</attribute>
+        </xpath>
+
+        <xpath expr="//table[@name='invoice_line_table']" position="attributes">
+            <attribute name="style">font-size:12px;</attribute>
+        </xpath>
+
+        <xpath expr="//div[@id='payment_term']" position="attributes">
+            <attribute name="style">font-size:12px;</attribute>
+        </xpath>
+
+        <xpath expr="//div[@id='right-elements']" position="attributes">
+            <attribute name="style">font-size:13px; margin-top:2px;</attribute>
+        </xpath>
+
+
+        <xpath expr="//t[@t-set='layout_document_title']" position="before">
+            <t t-if="not o" t-set="o" t-value="doc"/>
+            <t t-set="company" t-value="user.company_id"/>
+
+           <t t-set="date_block">
+                <div class="row g-0" id="invoice_dates">
+                    <div class="col mb-1" t-if="o.invoice_date" name="invoice_date">
+                        <t t-if="o.move_type == 'out_invoice'"><strong>Invoice Date</strong></t>
+                        <t t-elif="o.move_type == 'out_refund'"><strong>Credit Note Date</strong></t>
+                        <t t-elif="o.move_type == 'out_receipt'"><strong>Receipt Date</strong></t>
+                        <t t-else=""><strong>Date</strong></t>
+                        <div t-field="o.invoice_date"/>
+                    </div>
+                    <div class="col mb-1" t-if="o.invoice_date_due and o.move_type == 'out_invoice' and o.state == 'posted'" name="due_date">
+                        <strong>Due Date</strong>
+                        <div t-field="o.invoice_date_due"/>
+                    </div>
+                </div>
+            </t>
+
+        </xpath>
+
+    </template>
+
+</odoo>

@@ -16,10 +16,10 @@
                         <div class="modal-body p-5">
                             <p class="text-muted mb-4">Please select one option to continue.</p>
                             <div class="d-grid gap-4">
-                                <a href="/vendor/apply" class="btn btn-outline-secondary btn-lg" id="ssf_btn_supplier">
+                                <a href="/vendor/apply" class="btn btn-outline-primary btn-lg" id="ssf_btn_supplier">
                                     Join as Supplier
                                 </a>
-                                <a href="/customer/apply" class="btn btn-outline-secondary btn-lg" id="ssf_btn_customer">
+                                <a href="/customer/apply" class="btn btn-outline-primary btn-lg" id="ssf_btn_customer">
                                     Join as Customer
                                 </a>
                             </div>

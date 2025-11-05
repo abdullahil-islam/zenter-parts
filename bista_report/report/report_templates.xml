@@ -1,0 +1,198 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <template id="custom_address_layout">
+        <t t-set="colclass" t-value="('col-sm-6' if report_type == 'html' else 'col-6') + ' ms-auto'"/>
+        
+        <div t-if="address" class="address row mb-0 mt-0 pt-0" title="This block is not always present depending on the printed document.">
+
+            <div class="col-6 d-flex flex-column" name="address_container" style="font-size:13px;">
+                
+                <t t-out="address or None">
+                    <!-- <div class="bg-light border-1 rounded d-flex flex-column align-items-start justify-content-start opacity-75 text-muted text-start"
+                        style="font-size:8px; line-height:1; min-height:0; height:auto; padding:2px;">
+                        <strong>Address block</strong>
+                        <div>Usually contains the address of the document's recipient.</div>
+                    </div> -->
+                </t>
+
+            </div>
+
+            <div class="col-6 d-flex flex-column">
+                <t t-if="date_block">
+                    <div name="date_block" style="font-size:13px;">
+                        <t t-out="date_block"/>
+                    </div>
+                </t>
+            </div>
+                        
+        </div>
+
+        <div class="oe_structure" t-else=""></div>
+    
+    </template>
+
+
+
+
+    <template id="custom_external_layout_folder">
+    
+        <style>
+            @media print {
+                .article, 
+                .address, 
+                .col-6[name='address_container'] {
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    line-height: 1 !important;
+                }
+            }
+        </style>
+
+        <t t-if="not o" t-set="o" t-value="doc"/>
+        <t t-set="company" t-value="o and o.company_id or env.company"/>
+
+        <t t-set="header_shape_height" t-value="'135'"/>
+
+        <div t-attf-class="header o_company_#{company.id}_layout {{report_type != 'pdf' and 'h-0'}}">
+            
+            <div class="o_folder_header_container position-absolute start-0 top-0 z-n1 w-100">
+
+                <svg width="100%" t-att-height="header_shape_height" preserveAspectRatio="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100%" t-att-height="header_shape_height"
+                        t-att-fill="company.primary_color"
+                        fill-opacity=".1"/>
+                </svg>
+
+                <div class="o_folder_adaptative_shape d-flex flex-start position-relative">
+                    
+                    <svg class="d-block flex-grow-1" height="100%" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100%" height="100%" t-att-fill="company.primary_color" fill-opacity=".1"/>
+                    </svg>
+
+                    <!-- Angled folder shape -->
+                    <svg class="o_folder_angle_shape" width="80" height="100%" viewBox="0 0 80 48" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M5.70364 48H0V0.00100806H73.5404L80 0C74.2028 0.665869 68.7417 3.06684 64.332 6.88852L25.3513 40.6709C19.8969 45.3979 12.9212 48 5.70364 48Z"
+                            t-att-fill="company.primary_color" fill-opacity=".1"/>
+                    </svg>
+
+                    <div class="d-flex flex-column" name="date_block_container">
+                        <h2 t-attf-class="{{layout_document_title and 'o_folder_title mt-2 text-nowrap' or 'w-25'}}">
+                            <t t-out="layout_document_title"/>
+                        </h2>
+                    
+                    </div>
+
+
+                
+                </div>
+
+
+            </div>
+            
+            <!-- comapny logo and address  -->
+
+            <div class="o_folder_company_info d-flex justify-content-between">
+                <div>
+                    <img t-if="company.logo" class="o_company_logo_big mb-2" t-att-src="image_data_uri(company.logo)" alt="Logo"/>
+                    <div t-if="company.report_header" t-field="company.report_header" class="o_company_tagline fw-bold">Company tagline</div>
+                </div>
+                <div name="company_address" class="w-50 text-end">
+                    <ul class="list-unstyled" name="company_address_list">
+                        <li t-if="company.is_company_details_empty"><span t-field="company.partner_id" t-options='{"widget": "contact", "fields": ["address", "name"], "no_marker": true}'>
+                            <div class="d-flex flex-column align-items-center justify-content-center border-1 rounded p-4 h-100 w-100 bg-light opacity-75 text-muted text-center">
+                                <strong>Company address block</strong>
+                                <div>Contains the company address.</div>
+                            </div>
+                        </span></li>
+                        <li t-else="">
+                            <span t-field="company.company_details">
+                                <div class="d-flex flex-column align-items-center justify-content-center border-1 rounded p-4 h-100 w-100 bg-light opacity-75 text-muted text-center">
+                                    <strong>Company details block</strong>
+                                    <div>Contains the company details.</div>
+                                </div>
+                            </span>
+                        </li>
+                        <li t-if="not forced_vat"/>
+                        <li t-else="">
+                            <t t-esc="company.country_id.vat_label or 'Tax ID'">Tax ID</t>:
+                            <span t-esc="forced_vat">US12345671</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        
+        
+        </div>
+
+        <!-- BODY -->
+        <t t-set="layout_background_url"
+           t-value="'data:image/png;base64,%s' % company.layout_background_image.decode('utf-8') if company.layout_background_image and company.layout_background == 'Custom' else
+                '/base/static/img/demo_logo_report.png' if company.layout_background == 'Demo logo' else ''" />
+        <div t-attf-class="article o_report_layout_folder o_table_striped o_company_#{company.id}_layout {{'o_report_layout_background' if company.layout_background != 'Blank' else ''}}"
+             t-attf-style="{{report_type != 'pdf' and 'margin-top:' + header_shape_height + 'px;'}}
+                {{ 'background-image: url(%s);' % layout_background_url if layout_background_url else '' }}"
+             t-att-data-oe-model="o and o._name"
+             t-att-data-oe-id="o and o.id"
+             t-att-data-oe-lang="o and o.env.context.get('lang')">
+            <div class="pt-0 mt-0" t-attf-style="{{report_type != 'pdf' and 'margin-top:' + str(env['ir.actions.report'].get_paperformat().margin_top) + 'pt;'}}">
+                <t t-set="custom_layout_address" t-value="true"/>
+                <t t-call="bista_report.custom_address_layout"/>
+            </div>
+            <h3 t-if="report_type == 'pdf'" t-out="layout_document_title" class="opacity-0" t-att-style="'height: 0px'"/>
+            <t t-out="0"/>
+        </div>
+
+
+
+        <!-- Footer -->
+        <div t-attf-class="footer o_company_#{company.id}_layout {{report_type != 'pdf' and 'mt-auto'}}">
+            
+            <div class="o_footer_content d-flex border-top pt-2" style="padding:0; min-height:0; font-size:10px;">
+                
+                <div class="flex-grow-1 me-2 text-start" t-field="company.report_footer"/>        
+                <div class="text-end text-muted">
+                    <div t-if="report_type == 'pdf' and display_name_in_footer" t-out="o.name">(document name)</div>
+                    <div t-if="report_type == 'pdf'">Page <span class="page"/> / <span class="topage"/></div>
+                </div>        
+            </div>
+
+            <!-- Bank Information Table -->
+            <t t-if="company.partner_id.bank_ids">
+                <div class="pt-2">
+                    <table class="table table-sm o_main_table" style="width:100%; font-size:10px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #ccc;">
+                                <th class="text-start"><span>Bank</span></th>
+                                <th class="text-start"><span>Branch</span></th>
+                                <th class="text-start"><span>SWIFT</span></th>
+                                <th class="text-start"><span>Account Number</span></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <t t-foreach="company.partner_id.bank_ids" t-as="bank">
+                                <tr>
+                                    <td>
+                                        <t t-if="bank.bank_id" t-out="bank.bank_id.name"/>
+                                    </td>
+                                    <td t-out="bank.aba_routing or ''"/>
+                                    <td>
+                                        <t t-if="bank.bank_id" t-out="bank.bank_id.bic or ''"/>
+                                    </td>
+                                    <td t-out="bank.acc_number or ''"/>
+                                </tr>
+                            </t>
+                        </tbody>
+                    </table>
+                </div>
+            </t>
+
+        </div>
+
+
+
+
+    </template>
+
+
+</odoo>

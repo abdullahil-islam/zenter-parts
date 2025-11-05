@@ -96,13 +96,15 @@
                                             <input class="form-control" name="applicant_phone" required="1"/>
                                         </div>
                                         <div class="col-md-12" data-animate="left">
-                                            <label class="form-label">Street</label>
-                                            <input class="form-control" name="street"
+                                            <label class="form-label">Street
+                                            <span class="text-danger">*</span></label>
+                                            <input class="form-control" name="street" required="1"
                                                    placeholder="e.g., Company / Individual"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">City</label>
-                                            <input class="form-control" name="city"/>
+                                            <label class="form-label">City
+                                            <span class="text-danger">*</span></label>
+                                            <input class="form-control" name="city" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
                                             <label class="form-label">State<span class="text-danger">*</span></label>
@@ -116,12 +118,15 @@
                                             </select>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">ZIP</label>
-                                            <input class="form-control" name="zip"/>
+                                            <label class="form-label">ZIP
+                                            <span class="text-danger">*</span></label>
+                                            <input class="form-control" name="zip" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">Country</label>
-                                            <select class="form-select" name="country">
+                                            <label class="form-label">Country
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <select class="form-select" name="country" required="1">
                                                 <option value="">-- Select --</option>
                                                 <t t-foreach="country_ids" t-as="ct">
                                                     <option t-att-value="ct.id">
@@ -141,8 +146,10 @@
                                 <div class="card-body">
                                     <div class="row g-4">
                                         <div class="col-md-6" data-animate="left">
-                                            <label class="form-label">Name</label>
-                                            <input class="form-control" name="finance_name"
+                                            <label class="form-label">Name
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="finance_name" required="1"
                                                    placeholder="e.g., Company / Individual"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
@@ -150,8 +157,10 @@
                                             <input class="form-control" name="finance_position"/>
                                         </div>
                                         <div class="col-md-6" data-animate="left">
-                                            <label class="form-label">Email</label>
-                                            <input class="form-control" name="finance_email"/>
+                                            <label class="form-label">Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="finance_email" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
                                             <label class="form-label">Phone Number</label>
@@ -168,8 +177,10 @@
                                 <div class="card-body">
                                     <div class="row g-4">
                                         <div class="col-md-6" data-animate="left">
-                                            <label class="form-label">Name</label>
-                                            <input class="form-control" name="operational_name"
+                                            <label class="form-label">Name
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="operational_name" required="1"
                                                    placeholder="e.g., Company / Individual"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
@@ -177,12 +188,16 @@
                                             <input class="form-control" name="operational_position"/>
                                         </div>
                                         <div class="col-md-6" data-animate="left">
-                                            <label class="form-label">Email</label>
-                                            <input class="form-control" name="operational_email"/>
+                                            <label class="form-label">Email
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="operational_email" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">Phone Number</label>
-                                            <input class="form-control" name="operational_phone"/>
+                                            <label class="form-label">Phone Number
+                                                <span class="text-danger">*</span>
+                                            </label>
+                                            <input class="form-control" name="operational_phone" required="1"/>
                                         </div>
                                     </div>
                                 </div>
@@ -223,8 +238,10 @@
                                 </div>
 
                                 <div class="col-md-6" data-animate="right">
-                                    <label class="form-label">Account Currency</label>
-                                    <select class="form-select" name="account_currency">
+                                    <label class="form-label">Account Currency
+                                        <span class="text-danger">*</span>
+                                    </label>
+                                    <select class="form-select" name="account_currency" required="1">
                                         <option value="">-- Select --</option>
                                         <t t-foreach="currency_ids" t-as="cr">
                                             <option t-att-value="cr.id">
@@ -252,12 +269,12 @@
                                     <input class="form-control" name="payment_condition" required="1"/>
                                 </div>
 
-                                <div class="col-md-6" data-animate="left">
-                                    <label class="form-label">Price List Discount*
-                                        <span class="text-danger">*</span>
-                                    </label>
-                                    <input class="form-control" name="price_list_discount" required="1"/>
-                                </div>
+<!--                                <div class="col-md-6" data-animate="left">-->
+<!--                                    <label class="form-label">Price List Discount*-->
+<!--                                        <span class="text-danger">*</span>-->
+<!--                                    </label>-->
+<!--                                    <input class="form-control" name="price_list_discount" required="1"/>-->
+<!--                                </div>-->
                             </div>
                         </div>
                     </div>

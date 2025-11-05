@@ -104,6 +104,11 @@ class CrmLead(models.Model):
         ('rejected', 'Rejected'),
         ('locked', 'Locked'),
     ], string="Status", default='operation', tracking=True)
+    can_reject = fields.Boolean(
+        string="Can Reject",
+        compute="_compute_can_reject",
+        store=False
+    )
 
     # Finance/Admin Primary Contact
     finance_name = fields.Char(string="Finance/Admin Name", help="Finance/Admin Contact Name", tracking=True)
@@ -323,3 +328,14 @@ class CrmLead(models.Model):
             'res_id': self.partner_id.id,
             'target': 'current',
         }
+
+    @api.depends('state')
+    def _compute_can_reject(self):
+        for rec in self:
+            user = self.env.user
+            rec.can_reject = False
+
+            if rec.state == 'operation' and user.has_group('bista_supplier_registration.group_supplier_ops'):
+                rec.can_reject = True
+            elif rec.state == 'finance' and user.has_group('bista_supplier_registration.group_supplier_finance'):
+                rec.can_reject = True

@@ -18,8 +18,7 @@
                             <field name="currency_id"/>
                             <field name="journal_id"/>
                             <field name="payment_method_id"/>
-                            <!-- <field name="available_journal_ids"/> -->
-                            <!-- <field name="available_pay_method_ids"/> -->
+                            <field name="account_id" domain="[('account_type', '=', 'liability_current')]"/>
                         </group>
                     </group>
                     <footer>

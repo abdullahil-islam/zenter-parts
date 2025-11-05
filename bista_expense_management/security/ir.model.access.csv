@@ -6,3 +6,4 @@ access_travel_reject_wizard,travel.reject.wizard,model_travel_reject_wizard,base
 access_travel_diem_expense_wizard,travel.diem.expense.wizard,model_travel_diem_expense_wizard,base.group_user,1,1,1,1
 access_travel_diem_expense_wizard_line,travel.diem.expense.wizard.line,model_travel_diem_expense_wizard_line,base.group_user,1,1,1,1
 access_travel_advance_wizard,access_travel_advance_wizard,model_travel_advance_payment_wizard,base.group_user,1,1,1,1
+access_travel_settlement_wizard,access_travel_settlement_wizard,model_travel_advance_settlement_wizard,base.group_user,1,1,1,1

@@ -21,6 +21,7 @@
         "views/vendor_form_templates.xml",
         "views/auth_signup_inherit.xml",
         "views/purchase_order_view.xml",
+        "views/contactus_template.xml",
         "wizard/supplier_reject_wizard_views.xml",
     ],
     'installable': True,

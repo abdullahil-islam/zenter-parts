@@ -33,6 +33,11 @@ class VendorRegistrationController(http.Controller):
             f = files.get(name)
             return base64.b64encode(f.read()) if f and getattr(f, "filename", "") else False
 
+        # Helper to get only the file name
+        def _filename(name):
+            f = files.get(name)
+            return f.filename if f and getattr(f, "filename", "") else False
+
         # 1) Create application record
         vals = {
             # Section 1
@@ -74,12 +79,19 @@ class VendorRegistrationController(http.Controller):
             # "state": "submitted",
             # Section 4 (binaries)
             "incorporation_certificate": _bin("doc_certificate_incorp"),
+            "incorporation_certificate_filename": _filename("doc_certificate_incorp"),
             "bank_proof": _bin("doc_bank_proof"),
+            "bank_proof_filename": _filename("doc_bank_proof"),
             "master_agreement": _bin("doc_master_agreement"),
+            "master_agreement_filename": _filename("doc_master_agreement"),
             "kyc_form": _bin("doc_kyc_form"),
+            "kyc_form_filename": _filename("doc_kyc_form"),
             "annual_report": _bin("doc_annual_report"),
+            "annual_report_filename": _filename("doc_annual_report"),
             "insurance_certificates": _bin("doc_insurance"),
+            "insurance_certificates_filename": _filename("doc_insurance"),
             "other_documents": _bin("doc_other"),
+            "other_documents_filename": _filename("doc_other"),
         }
 
         # 3) Ensure we have a tag "Vendor Application"

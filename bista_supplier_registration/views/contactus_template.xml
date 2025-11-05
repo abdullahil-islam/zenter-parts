@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="contactus_custom_buttons" inherit_id="website.contactus">
+        <!-- Add professional buttons before the lead paragraph -->
+        <xpath expr="//p[@class='lead']" position="before">
+            <div class="d-flex gap-3 mb-4 flex-wrap">
+                <a href="/vendor/apply" class="btn btn-lg btn-outline-primary d-flex align-items-center">
+                    <span>Join As Supplier</span>
+                </a>
+                <a href="/customer/apply" class="btn btn-lg btn-outline-primary d-flex align-items-center">
+                    <span>Join As Customer</span>
+                </a>
+            </div>
+        </xpath>
+    </template>
+</odoo>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <record id="view_travel_advance_settlement_wizard_form" model="ir.ui.view">
+        <field name="name">travel.advance.settlement.wizard.form</field>
+        <field name="model">travel.advance.settlement.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Settle Advance Balance">
+                <sheet>
+                    <div class="alert alert-info" role="alert" invisible="balance_type != 'employee_owes'">
+                        <strong>Employee Owes Company</strong><br/>
+                        The employee received more advance than spent. Create an inbound payment to collect the difference.
+                    </div>
+                    <div class="alert alert-warning" role="alert" invisible="balance_type != 'company_owes'">
+                        <strong>Company Owes Employee</strong><br/>
+                        The employee spent more than the advance received. Create an outbound payment for the remaining amount.
+                    </div>
+                    
+                    <group>
+                        <group string="Settlement Summary">
+                            <field name="travel_id" readonly="1"/>
+                            <field name="partner_id" readonly="1"/>
+                            <field name="advance_amount" readonly="1"/>
+                            <field name="actual_expense" readonly="1"/>
+                            <field name="balance_type" readonly="1"/>
+                            <field name="balance_amount" readonly="1" 
+                                   decoration-danger="balance_type == 'employee_owes'"
+                                   decoration-warning="balance_type == 'company_owes'"/>
+                        </group>
+                        <group string="Payment Details">
+                            <field name="currency_id" invisible="1"/>
+                            <field name="payment_date"/>
+                            <field name="journal_id" required="1"/>
+                            <field name="memo" placeholder="Optional memo for this settlement..."/>
+                        </group>
+                    </group>
+                    
+                    <footer>
+                        <button string="Create Settlement Payment" 
+                                type="object" 
+                                name="action_create_settlement_payment"
+                                class="btn-primary"/>
+                        <button string="Cancel" class="btn-default" special="cancel"/>
+                    </footer>
+                </sheet>
+            </form>
+        </field>
+    </record>
+</odoo>

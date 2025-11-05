@@ -51,16 +51,61 @@ class CorporateTravel(models.Model):
     ], default='draft', tracking=True)
     md_rejection_reason = fields.Text(string='MD Rejection Reason', tracking=True)
     fd_rejection_reason = fields.Text(string='FD Rejection Reason', tracking=True)
-    expense_sheet_ids = fields.Many2many('hr.expense.sheet', string='Created Expense Sheets')
+    expense_sheet_ids = fields.One2many('hr.expense.sheet', 'travel_id', string='Created Expense Sheets')
 
+    # Advance Payment Fields
     advance_payment_id = fields.Many2one('account.payment', string='Advance Payment', readonly=True, copy=False)
+    advance_move_id = fields.Many2one('account.move', string='Advance Payment Bill', readonly=True, copy=False)
+    advance_account_id = fields.Many2one('account.account', string='Account', required=True)
     advance_amount = fields.Monetary(string='Advance Amount', readonly=True, copy=False)
     advance_state = fields.Selection([
         ('none', 'No Advance'),
-        ('draft', 'Draft'),
         ('paid', 'Paid'),
+        ('partially_settled', 'Partially Settled'),
+        ('fully_settled', 'Fully Settled'),
         ('reconciled', 'Reconciled'),
-    ], string='Advance State', default='none', readonly=True, copy=False)
+    ], string='Advance State', default='none', readonly=True, copy=False, tracking=True)
+
+    # NEW FIELDS for Advance Settlement
+    actual_other_expense = fields.Monetary(
+        string='Actual Other Expenses',
+        compute='_compute_actual_expenses',
+        store=True,
+        currency_field='currency_id',
+        help="Total actual 'Other' expenses from approved expense sheets"
+    )
+    advance_balance = fields.Monetary(
+        string='Advance Balance',
+        compute='_compute_advance_balance',
+        store=True,
+        currency_field='currency_id',
+        help="Positive = Employee owes company, Negative = Company owes employee"
+    )
+    settlement_payment_id = fields.Many2one(
+        'account.payment',
+        string='Settlement Payment',
+        readonly=True,
+        copy=False,
+        help="Payment created to settle advance balance"
+    )
+
+    @api.depends('expense_sheet_ids', 'expense_sheet_ids.state', 'expense_sheet_ids.expense_line_ids')
+    def _compute_actual_expenses(self):
+        """Calculate actual 'Other' expenses from approved/posted expense sheets"""
+        for rec in self:
+            total = 0.0
+            # Get the "Other Expenses" sheet
+            for sheet in rec.expense_sheet_ids:
+                if 'Other Expenses' in sheet.name and sheet.state in ['approve', 'post', 'done']:
+                    # Sum up all expense lines in this sheet
+                    total += sum(sheet.expense_line_ids.mapped('total_amount_currency'))
+            rec.actual_other_expense = total
+
+    @api.depends('advance_amount', 'actual_other_expense')
+    def _compute_advance_balance(self):
+        """Calculate balance: Positive = Employee owes, Negative = Company owes"""
+        for rec in self:
+            rec.advance_balance = rec.advance_amount - rec.actual_other_expense
 
     def action_open_advance_wizard(self):
         """Return action to open advance payment wizard for this travel request."""
@@ -69,7 +114,7 @@ class CorporateTravel(models.Model):
         default_amount = sum(self.line_ids.filtered(lambda x: x.product_id.travel_exp_type == 'other' and x.payment_mode == 'own_account').mapped('estimated_amount'))
         ctx.update({
             'default_travel_id': self.id,
-            'default_amount': default_amount or 0.0,  # adapt field name if needed
+            'default_amount': default_amount or 0.0,
             'default_partner_id': self.employee_id.user_id.partner_id.id,
             'default_currency_id': self.currency_id.id or self.env.company.currency_id.id,
         })
@@ -80,6 +125,32 @@ class CorporateTravel(models.Model):
             'view_type': 'form',
             'target': 'new',
             'context': ctx,
+        }
+
+    def action_settle_advance(self):
+        """Open wizard to settle advance balance"""
+        self.ensure_one()
+        
+        if not self.advance_payment_id:
+            raise UserError(_("No advance payment exists for this travel request."))
+        
+        if self.advance_state == 'fully_settled':
+            raise UserError(_("Advance has already been fully settled."))
+        
+        if abs(self.advance_balance) < 0.01:  # Threshold for rounding
+            raise UserError(_("Advance balance is already zero. No settlement needed."))
+
+        return {
+            'type': 'ir.actions.act_window',
+            'name': _('Settle Advance'),
+            'res_model': 'travel.advance.settlement.wizard',
+            'view_mode': 'form',
+            'target': 'new',
+            'context': {
+                'default_travel_id': self.id,
+                'default_balance_amount': abs(self.advance_balance),
+                'default_balance_type': 'employee_owes' if self.advance_balance > 0 else 'company_owes',
+            },
         }
 
     @api.model
@@ -195,7 +266,6 @@ class CorporateTravel(models.Model):
                 'payment_mode': l.payment_mode,
                 'description': l.description,
                 'vendor_id': l.vendor_id.id,
-                # 'currency_id': l.currency_id.id or self.currency_id.id,
             }
             if t == 'po':
                 po_lines.append(ln_vals)
@@ -207,8 +277,6 @@ class CorporateTravel(models.Model):
         Sheet = self.env['hr.expense.sheet']
 
         def make_sheet(name, lines):
-            # if not lines:
-            #     return self.env['hr.expense.sheet']
             sheet_vals = {'name': name, 'employee_id': self.employee_id.id}
             sheet = Sheet.create(sheet_vals)
             sheet.write({'journal_id': sheet.payment_method_line_id.journal_id.id})
@@ -218,7 +286,6 @@ class CorporateTravel(models.Model):
                 try:
                     Expense.create(ln_vals)
                 except Exception as e:
-                    # fallback: try with minimal fields if model structure differs by Odoo version
                     try:
                         Expense.create({
                             'name': ln_vals.get('name'),
@@ -230,7 +297,6 @@ class CorporateTravel(models.Model):
                             'vendor_id': ln_vals.get('vendor_id')
                         })
                     except Exception:
-                        # swallow to avoid crash in mixed environments; report/log if needed
                         pass
             return sheet
 

@@ -7,11 +7,14 @@ class ResPartner(models.Model):
 
     analytic_distribution = fields.Json()
 
+    # default plan added in-case no plan found for customer
     @api.model_create_multi
     def create(self, vals_list):
         partners = super().create(vals_list)
         AnalyticAccount = self.env['account.analytic.account'].sudo()
         default_plan = self.env['account.analytic.plan'].search([('is_eligible_customer', '=', True)], limit=1)
+        if not default_plan:
+            default_plan = self.env['account.analytic.plan'].search([], limit=1)
         for partner in partners:
             AnalyticAccount.create({
                 'name': f"Partner - {partner.name}",

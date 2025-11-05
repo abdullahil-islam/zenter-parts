@@ -14,8 +14,10 @@ class AccountAnalyticPlan(models.Model):
     is_eligible_product = fields.Boolean(default=False)
     is_eligible_prod_brand = fields.Boolean(default=False)
     is_eligible_prod_categ = fields.Boolean(default=False)
-    is_eligible_user = fields.Boolean(default=False)
+    # is_eligible_user = fields.Boolean(default=False)
     is_eligible_hr_department = fields.Boolean(default=False)
+    is_eligible_region = fields.Boolean(default=False)
+    is_eligible_top_region = fields.Boolean(default=False)
 
     @api.model
     def get_relevant_plans(self, **kwargs):
@@ -36,8 +38,8 @@ class AccountAnalyticPlan(models.Model):
                     data.append(plan)
                 elif kwargs.get('current_model', '') == 'product.category' and rec.is_eligible_prod_categ:
                     data.append(plan)
-                elif kwargs.get('current_model', '') == 'res.users' and rec.is_eligible_user:
-                    data.append(plan)
+                # elif kwargs.get('current_model', '') == 'res.users' and rec.is_eligible_user:
+                #     data.append(plan)
                 elif kwargs.get('current_model', '') == 'hr.department' and rec.is_eligible_hr_department:
                     data.append(plan)
             return data

@@ -21,7 +21,10 @@
                             invisible="state != 'fd_approval'"
                             groups="base.group_system,bista_expense_management.group_fd"/>
                     <button name="action_open_advance_wizard" type="object" string="Advance Payment" class="oe_highlight"
-                            invisible="advance_state in ['paid','reconciled'] or state != 'approved'"
+                            invisible="advance_state != 'none' or state != 'approved'"
+                            groups="base.group_system,bista_expense_management.group_fd"/>
+                    <button name="action_settle_advance" type="object" string="Settle Advance" class="btn-warning"
+                            invisible="1"
                             groups="base.group_system,bista_expense_management.group_fd"/>
                     <field name="state" widget="statusbar"/>
                 </header>
@@ -35,6 +38,20 @@
                         </button>
                     </div>
 
+                    <!-- Alert for Advance Balance -->
+                    <div class="alert alert-warning" role="alert" 
+                         invisible="1">
+                        <strong>Advance Settlement Required</strong><br/>
+                        <span invisible="advance_balance &lt;= 0">
+                            Employee owes company: <field name="advance_balance" readonly="1" nolabel="1" 
+                                                          widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                        <span invisible="advance_balance &gt;= 0">
+                            Company owes employee: <field name="advance_balance" readonly="1" nolabel="1" 
+                                                          widget="monetary" options="{'currency_field': 'currency_id'}"/>
+                        </span>
+                    </div>
+
                     <div class="oe_title">
                         <h1><field name="name" readonly="1"/></h1>
                     </div>
@@ -46,9 +63,6 @@
                                    groups="bista_expense_management.group_md,bista_expense_management.group_fd,base.group_system"/>
                             <field name="department_id" readonly="1"/>
                             <field name="job_id" readonly="1"/>
-                            <field name="advance_payment_id" readonly="1"/>
-                            <field name="advance_amount" readonly="1"/>
-                            <field name="advance_state" readonly="1"/>
                         </group>
                         <group>
                             <field name="phone" readonly="1"/>
@@ -58,6 +72,27 @@
                             <field name="return_datetime" required="1" readonly="state in ['approved', 'rejected']" force_save="1"/>
                         </group>
                     </group>
+
+                    <!-- Advance Payment Information -->
+                    <group string="Advance Payment Information" invisible="advance_state == 'none'">
+                        <group>
+                            <field name="advance_payment_id" readonly="1"/>
+                            <field name="advance_move_id" readonly="1"/>
+                            <field name="advance_account_id" readonly="1"/>
+                            <field name="advance_amount" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="advance_state" readonly="1"/>
+                            <field name="actual_other_expense" readonly="1"/>
+                            <field name="advance_balance" readonly="1" 
+                                   decoration-danger="advance_balance &gt; 0"
+                                   decoration-success="advance_balance == 0"
+                                   decoration-warning="advance_balance &lt; 0"/>
+                            <field name="settlement_payment_id" readonly="1" 
+                                   invisible="advance_state not in ['partially_settled', 'fully_settled']"/>
+                        </group>
+                    </group>
+
                     <notebook>
                         <page string="Estimated Costs">
                             <button name="action_add_meals" string="Add Meals" type="object" class="btn-link" invisible="state != 'draft'"/>
@@ -102,6 +137,7 @@
                 <field name="destination"/>
                 <field name="state"/>
                 <field name="total_estimated_amount"/>
+                <field name="advance_state"/>
             </list>
         </field>
     </record>

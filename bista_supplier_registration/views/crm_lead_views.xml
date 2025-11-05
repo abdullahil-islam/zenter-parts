@@ -41,7 +41,8 @@
                     <button name="action_approve" type="object" class="oe_highlight" string="Approve"
                             invisible="state != 'finance'" groups="bista_supplier_registration.group_supplier_finance"/>
                     <button name="action_reject" type="object" class="oe_highlight" string="Reject"
-                            invisible="state not in ['operation','finance']"/>
+                            invisible="can_reject == False"/>
+
                     <button name="action_reset_to_operation" class="oe_highlight" type="object"
                             string="Reset to Operation" invisible="state != 'rejected'"
                             groups="bista_supplier_registration.group_supplier_ops,bista_supplier_registration.group_supplier_finance"/>
@@ -77,19 +78,19 @@
                             <field name="email_from" readonly="state in ['approved', 'locked']" required="1"/>
                             <label for="supplier_street_page_lead" string="Main Address"/>
                             <div class="o_address_format">
-                                <field name="street" id="supplier_street_page_lead" placeholder="Street..."
+                                <field name="street" id="supplier_street_page_lead" placeholder="Street..." required="1"
                                        class="o_address_street" readonly="state in ['approved', 'locked']"/>
                                 <field name="street2" placeholder="Street 2..." class="o_address_street"
                                        readonly="state in ['approved', 'locked']"/>
-                                <field name="city" placeholder="City" class="o_address_city"
+                                <field name="city" placeholder="City" class="o_address_city" required="1"
                                        readonly="state in ['approved', 'locked']"/>
                                 <field name="state_id" class="o_address_state" placeholder="State"
                                        options='{"no_open": True}' readonly="state in ['approved', 'locked']" required="1"/>
-                                <field name="zip" placeholder="ZIP" class="o_address_zip"
+                                <field name="zip" placeholder="ZIP" class="o_address_zip" required="1"
                                        readonly="state in ['approved', 'locked']"/>
                                 <field name="country_id" placeholder="Country" class="o_address_country"
                                        options='{"no_open": True, "no_create": True}'
-                                       readonly="state in ['approved', 'locked']"/>
+                                       readonly="state in ['approved', 'locked']" required="1"/>
                             </div>
                             <field name="website" widget="url" placeholder="e.g. https://www.odoo.com"
                                    readonly="state in ['approved', 'locked']"/>
@@ -102,7 +103,7 @@
                             <field name="bank_country" readonly="state in ['approved', 'locked']"/>
                             <field name="acc_number" readonly="state in ['approved', 'locked']"/>
                             <field name="acc_holder_name" readonly="state in ['approved', 'locked']"/>
-                            <field name="currency_id" readonly="state in ['approved', 'locked']"/>
+                            <field name="currency_id" readonly="state in ['approved', 'locked']" required="1"/>
                             <field name="supplier_invoice_currency_id" readonly="state in ['approved', 'locked']"/>
                             <field name="standard_payment_term" readonly="state in ['approved', 'locked']"/>
                             <field name="payment_term_id" readonly="state in ['approved', 'locked']"/>
@@ -111,15 +112,15 @@
 
                     <group>
                         <group string="Primary Contact (Finance/Admin)">
-                            <field name="finance_name" readonly="state in ['approved', 'locked']"/>
+                            <field name="finance_name" readonly="state in ['approved', 'locked']" required="1"/>
                             <field name="finance_phone" readonly="state in ['approved', 'locked']"/>
-                            <field name="finance_email" readonly="state in ['approved', 'locked']"/>
+                            <field name="finance_email" readonly="state in ['approved', 'locked']" required="1"/>
                             <field name="finance_position" readonly="state in ['approved', 'locked']"/>
                         </group>
                         <group string="Primary Contact (Operational)">
-                            <field name="operational_name" readonly="state in ['approved', 'locked']"/>
-                            <field name="operational_phone" readonly="state in ['approved', 'locked']"/>
-                            <field name="operational_email" readonly="state in ['approved', 'locked']"/>
+                            <field name="operational_name" readonly="state in ['approved', 'locked']" required="1"/>
+                            <field name="operational_phone" readonly="state in ['approved', 'locked']" required="1"/>
+                            <field name="operational_email" readonly="state in ['approved', 'locked']" required="1"/>
                             <field name="operational_position" readonly="state in ['approved', 'locked']"/>
                         </group>
                     </group>
@@ -180,11 +181,29 @@
         </field>
     </record>
 
+    <!-- Search View for Supplier Register -->
+    <record id="view_supplier_register_search" model="ir.ui.view">
+        <field name="name">crm.lead.supplier.register.search</field>
+        <field name="model">crm.lead</field>
+        <field name="arch" type="xml">
+            <search string="Supplier Register">
+                <!-- Filters for state -->
+                <filter name="filter_operation" string="Operational Team" domain="[('state','=','operation')]"/>
+                <filter name="filter_finance" string="Finance Team" domain="[('state','=','finance')]"/>
+                <filter name="filter_approved" string="Approved" domain="[('state','=','approved')]"/>
+                <filter name="filter_rejected" string="Rejected" domain="[('state','=','rejected')]"/>
+                <filter name="filter_locked" string="Locked" domain="[('state','=','locked')]"/>
+            </search>
+        </field>
+    </record>
+
+
     <!-- Action -->
     <record id="action_supplier_register" model="ir.actions.act_window">
         <field name="name">Supplier Applications</field>
         <field name="res_model">crm.lead</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_supplier_register_search"/>
         <field name="domain">[('is_supplier_reg', '=', True)]</field>
         <field name="context">{'is_supplier_reg': True}</field>
         <field name="view_ids" eval="[(5, 0, 0),

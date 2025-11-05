@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <record id="report_layout_custom_folder" model="report.layout">
+            <field name="name">Custom</field>
+            <field name="sequence">9</field>
+            <field name="view_id" ref="bista_report.custom_external_layout_folder"/>
+        </record>
+    </data>
+</odoo>

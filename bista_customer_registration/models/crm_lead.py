@@ -19,7 +19,11 @@ class CrmLead(models.Model):
         ('approved', 'Approved'),
         ('rejected', 'Rejected'),
     ], string="Status", default='finance', tracking=True)
-
+    can_reject_customer = fields.Boolean(
+        string="Can Reject Customer",
+        compute="_compute_can_reject_customer",
+        store=False
+    )
     # customer contact field
     # customer_contact_name = fields.Char(
     #     string="Contact Name", tracking=True, help="Primary contact person for the customer")
@@ -174,3 +178,16 @@ class CrmLead(models.Model):
             'res_id': self.partner_id.id,
             'target': 'current',
         }
+
+    @api.depends('customer_state')
+    def _compute_can_reject_customer(self):
+        for rec in self:
+            user = self.env.user
+            rec.can_reject_customer = False
+
+            if rec.customer_state == 'finance' and user.has_group('bista_customer_registration.group_customer_finance'):
+                rec.can_reject_customer = True
+            elif rec.customer_state == 'commercial' and user.has_group('bista_customer_registration.group_customer_commercial'):
+                rec.can_reject_customer = True
+            elif rec.customer_state == 'accounts' and user.has_group('bista_customer_registration.group_customer_accounts'):
+                rec.can_reject_customer = True

@@ -94,8 +94,8 @@ class AccountMoveLine(models.Model):
 
         # if caller cares about validation (UI), raise; otherwise log and continue
         if raise_on_missing:
-            if not getattr(user, 'analytic_distribution', False):
-                raise ValidationError(_('Analytic distribution plans is not set on user.'))
+            # if not getattr(user, 'analytic_distribution', False):
+            #     raise ValidationError(_('Analytic distribution plans is not set on user.'))
             if not (department and getattr(department, 'analytic_distribution', False)):
                 dep_name = department.name if department else _('(no department)')
                 raise ValidationError(
