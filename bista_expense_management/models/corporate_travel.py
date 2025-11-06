@@ -56,7 +56,7 @@ class CorporateTravel(models.Model):
     # Advance Payment Fields
     advance_payment_id = fields.Many2one('account.payment', string='Advance Payment', readonly=True, copy=False)
     advance_move_id = fields.Many2one('account.move', string='Advance Payment Bill', readonly=True, copy=False)
-    advance_account_id = fields.Many2one('account.account', string='Account', required=True)
+    advance_account_id = fields.Many2one('account.account', string='Account', required=False, copy=False)
     advance_amount = fields.Monetary(string='Advance Amount', readonly=True, copy=False)
     advance_state = fields.Selection([
         ('none', 'No Advance'),
