@@ -14,7 +14,7 @@
                         <field name="name"/>
                         <field name="type" widget="radio" options="{'horizontal': True}"/>
                         <field name="meal_type" widget="radio" options="{'horizontal': True}" invisible="type != 'per_diem'" required="type == 'per_diem'" force_save="1"/>
-                        <field name="price_unit" readonly="type == 'per_diem'" force_save="1"/>
+                        <field name="price_unit"/>
                         <field name="is_po_approve"/>
                         <field name="product_id" readonly="1"/>
                         <field name="company_id" invisible="1"/>

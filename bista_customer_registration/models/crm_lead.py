@@ -89,19 +89,48 @@ class CrmLead(models.Model):
         for lead in self:
             if not lead.partner_id:
                 raise UserError("Cannot approve: Registration request has no linked partner.")
+            if not lead.bank_id:
+                raise UserError("Cannot approve: Registration request has no linked bank account.")
 
             lead.write({'customer_state': 'approved'})
 
-            # Create main customer partner
-            lead.partner_id.registration_status = True
+            if lead.bank_id and lead.acc_number and lead.currency_id:
+                lead.partner_id.sudo().write({
+                    'bank_ids': [(0, 0, {
+                        'bank_id': lead.bank_id.id,
+                        'acc_number': lead.acc_number,
+                        'currency_id': lead.currency_id.id,
+                    })]
+                })
+
+            lead.partner_id.sudo().write({
+                'name': lead.partner_id.name or lead.name,
+                'street': lead.street,
+                'street2': lead.street2,
+                'city': lead.city,
+                'state_id': lead.state_id.id,
+                'zip': lead.zip,
+                'vat': lead.vat,
+                'country_id': lead.country_id.id,
+                'website': lead.website,
+                'email': lead.email_from,
+                'phone': lead.phone,
+                'lead_id': lead.id,
+                'customer_rank': 1,
+                'business_type': lead.business_type,
+                'property_payment_term_id': lead.payment_term_id.id,
+                'trading_name': lead.trading_name,
+                'registration_status': True,
+            })
+
             lead.partner_id.grant_portal_access()
 
-            lead._create_customer_child_contact(lead.partner_id)
+            lead._create_child_contact(lead.partner_id)
             _logger.info(
                 "Customer Registration %s (ID: %d) approved and portal access granted to partner %s.",
                 lead.name, lead.id, lead.partner_id.name)
 
-    def _create_customer_child_contact(self, partner):
+    def _create_child_contact(self, partner):
         """
         Create a child contact under the given partner using customer contact fields
         """
@@ -113,6 +142,7 @@ class CrmLead(models.Model):
             'name': self.finance_name,
             'phone': self.finance_phone,
             'email': self.finance_email,
+            'function': self.finance_position,
         })
 
     def action_reject_customer(self):

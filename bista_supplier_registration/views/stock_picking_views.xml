@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="stock_picking_form_inherit_is_approved" model="ir.ui.view">
+        <field name="name">stock.picking.form.inherit.is_approved</field>
+        <field name="model">stock.picking</field>
+        <field name="inherit_id" ref="stock.view_picking_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">
+                    [
+                        '&amp;',
+                            ('registration_status', '=', True),
+                            '|',
+                                ('company_id', '=', False),
+                                ('company_id', 'parent_of', company_id)
+                    ]
+                </attribute>
+            </xpath>
+        </field>
+    </record>
+
+    <record id="product_supplierinfo_list_inherit_zenter" model="ir.ui.view">
+        <field name="name">product.supplierinfo.replenishment.list.inherit.zenter</field>
+        <field name="model">product.supplierinfo</field>
+        <field name="inherit_id" ref="product.product_supplierinfo_tree_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="domain">
+                    [
+                        '&amp;',
+                            ('registration_status', '=', True),
+                            '|',
+                                ('company_id', '=', False),
+                                ('company_id', 'parent_of', company_id)
+                    ]
+                </attribute>
+            </xpath>
+        </field>
+    </record>
+</odoo>
+

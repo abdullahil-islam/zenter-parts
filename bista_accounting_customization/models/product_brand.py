@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from odoo import api, fields, models
 
 
@@ -17,7 +19,7 @@ class ProductBrand(models.Model):
         string="Number of products", compute="_compute_products_count"
     )
     company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
-    analytic_distribution = fields.Json()
+    analytic_distribution = fields.Json(required=True)
 
     @api.depends("product_ids")
     def _compute_products_count(self):

@@ -2,10 +2,11 @@
 {
     'name': 'Bista Zenter Pdf Reports',
     'version': '18.0.1.0.0',
-    'summary': '',
+    'summary': 'Customized PDF report templates',
+    'description': 'This module provides designed PDF report layouts and templates for invoices and related accounting documents in Odoo.',
+    'author': "Bista Solutions",
     'category': 'Reporting',
-    'description': 'Bista Zenter Pdf Reports',
-    'depends': ['base', 'account'],
+    'depends': ['base', 'l10n_us', 'account'],
     'data': [
         # Reports
         'report/report_templates.xml',

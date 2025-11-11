@@ -224,7 +224,19 @@ class CorporateTravel(models.Model):
         self.ensure_one()
         if not self.env.user.has_group('bista_expense_management.group_fd') and not self.env.user.has_group('base.group_system'):
             raise ValidationError('Only Finance Director can approve here.')
-        # create expense sheets
+        for rec in self:
+            missing_vendor_lines = rec.line_ids.filtered(
+                lambda line: not line.vendor_id
+            )
+
+            if missing_vendor_lines:
+                product_names = missing_vendor_lines.mapped('product_id.name')
+                error_message = _(
+                    "The following lines are missing vendor information:\n\n%s\n\n"
+                    "Please set the vendor for these lines before approving."
+                ) % '\n'.join(['• ' + name for name in product_names])
+
+                raise UserError(error_message)
         sheets = self._create_expense_sheets()
         self.expense_sheet_ids = [(6, 0, sheets.ids)]
         self.state = 'approved'

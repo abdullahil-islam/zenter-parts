@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 from odoo import models, fields, api
 from odoo.osv import expression
 from odoo.tools import escape_psql
@@ -7,25 +9,43 @@ class ProductTemplate(models.Model):
     _name = 'product.template'
     _inherit = ['product.template', 'analytic.mixin']
 
-    # analytic_distribution = fields.Json()
     product_brand_id = fields.Many2one(
-        "product.brand", string="Brand", help="Select a brand for this product")
+        "product.brand", 
+        string="Brand", 
+        help="Select a brand for this product"
+    )
 
     analytic_distribution = fields.Json(
         compute='_compute_analytic_distribution',
-        store=True
+        store=True,
+        readonly=False,  # Allow manual override if needed
+        help="Auto-computed from Brand and Category, but can be manually overridden"
     )
+    
     oem_ids = fields.Many2many(
-        string="OEM", comodel_name='product.tag', relation='product_template_oem_rel')
+        string="OEM", 
+        comodel_name='product.tag', 
+        relation='product_template_oem_rel'
+    )
 
-    @api.depends('product_brand_id', 'categ_id')
+    @api.depends('product_brand_id', 'product_brand_id.analytic_distribution', 
+                 'categ_id', 'categ_id.analytic_distribution')
     def _compute_analytic_distribution(self):
+        """
+        Compute analytic distribution from brand and category.
+        Brand distribution is applied first, then category overrides.
+        """
         for product in self:
             dist = {}
+            
+            # Apply brand distribution first
             if product.product_brand_id and product.product_brand_id.analytic_distribution:
                 dist.update(product.product_brand_id.analytic_distribution)
+            
+            # Category distribution overrides brand
             if product.categ_id and product.categ_id.analytic_distribution:
                 dist.update(product.categ_id.analytic_distribution)
+            
             product.analytic_distribution = dist
 
     @api.model
@@ -58,19 +78,25 @@ class ProductTemplate(models.Model):
 
         This is called internally to construct the actual search domain
         from the search term and configured fields.
+        
+        Fixed: Now properly uses the search parameter for OEM tag matching.
         """
         domains = domain_list.copy()
+        
         if search:
             for search_term in search.split(' '):
                 subdomains = [[(field, 'ilike', escape_psql(search_term))] for field in fields]
                 if extra:
                     subdomains.append(extra(self.env, search_term))
 
+                # OEM tag search
                 ProductTag = self.env['product.tag'].sudo()
-                matching_tags = ProductTag.search([('name', 'ilike', search)])
+                matching_tags = ProductTag.search([('name', 'ilike', search_term)])
                 if matching_tags:
                     subdomains.append([('oem_ids', 'in', matching_tags.ids)])
+                
                 domains.append(expression.OR(subdomains))
+        
         return expression.AND(domains)
 
     def _search_fetch(self, search_detail, search, limit, order):
@@ -81,7 +107,12 @@ class ProductTemplate(models.Model):
         """
         fields = search_detail['search_fields']
         base_domain = search_detail['base_domain']
-        search_domain = self._search_build_domain(base_domain, search, fields, search_detail.get('search_extra'))
+        search_domain = self._search_build_domain(
+            base_domain, 
+            search, 
+            fields, 
+            search_detail.get('search_extra')
+        )
 
         products = self.search(search_domain, limit=limit, order=order)
         count = len(products)

@@ -101,6 +101,7 @@
                             <field name="bank_name" readonly="state in ['approved', 'locked']"/>
                             <field name="bic" readonly="state in ['approved', 'locked']"/>
                             <field name="bank_country" readonly="state in ['approved', 'locked']"/>
+                            <field name="bank_id" readonly="state in ['approved', 'locked']"/>
                             <field name="acc_number" readonly="state in ['approved', 'locked']"/>
                             <field name="acc_holder_name" readonly="state in ['approved', 'locked']"/>
                             <field name="currency_id" readonly="state in ['approved', 'locked']" required="1"/>

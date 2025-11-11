@@ -8,7 +8,10 @@
         <field name="arch" type="xml">
             <xpath expr="//field[@name='categ_id']" position="after">
                 <field name="oem_ids" widget="many2many_tags"/>
-                <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting" readonly="1"/>
+                <field name="analytic_distribution" 
+                       widget="analytic_distribution" readonly="1"
+                       groups="analytic.group_analytic_accounting"
+                       help="Auto-computed from Brand and Category. You can override manually if needed."/>
             </xpath>
             <xpath expr="//field[@name='categ_id']" position="before">
                 <field name="product_brand_id"/>

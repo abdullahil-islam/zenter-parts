@@ -4,7 +4,7 @@
     'version': '1.0.0',
     'summary': 'Estimate and approve corporate travel costs (MD -> FD approvals)',
     'description': 'Corporate travel request form with multi-level approval and expense creation.',
-    'author': 'Generated',
+    'author': "Bista Solutions",
     'category': 'Human Resources/Expenses',
     'depends': ['base', 'mail', 'hr', 'hr_expense'],
     'data': [

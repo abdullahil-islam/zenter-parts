@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Country Group Form View Inheritance -->
+    <record id="view_country_group_form_inherit" model="ir.ui.view">
+        <field name="name">res.country.group.form.inherit</field>
+        <field name="model">res.country.group</field>
+        <field name="inherit_id" ref="base.view_country_group_form"/>
+        <field name="arch" type="xml">
+            <!-- Add analytic distribution in a separate group -->
+            <xpath expr="//field[@name='country_ids']" position="after">
+                <field name="analytic_distribution"
+                       widget="analytic_distribution"
+                       groups="analytic.group_analytic_accounting"
+                       help="Default analytic distribution for partners in this region. Inherits from parent region if set."/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

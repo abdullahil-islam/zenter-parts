@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import logging
 from odoo import fields, models, api, _
 from odoo.exceptions import UserError
@@ -32,6 +34,13 @@ class CrmLead(models.Model):
         required=True
     )
     incorporation_certificate_filename = fields.Char(string="File Name")
+    related_incorporation_certificate_id = fields.Many2one(
+        "ir.attachment",
+        string="Certificate of Incorporation / Business Registration Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     bank_proof = fields.Binary(
         string="Proof of Bank Account",
@@ -40,6 +49,13 @@ class CrmLead(models.Model):
         required=True
     )
     bank_proof_filename = fields.Char(string="File Name")
+    related_bank_proof_id = fields.Many2one(
+        "ir.attachment",
+        string="Proof of Bank Account Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     master_agreement = fields.Binary(
         string="Signed Master Agreement / Framework",
@@ -47,6 +63,13 @@ class CrmLead(models.Model):
         attachment=True
     )
     master_agreement_filename = fields.Char(string="File Name")
+    related_master_agreement_id = fields.Many2one(
+        "ir.attachment",
+        string="Signed Master Agreement / Framework Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     kyc_form = fields.Binary(
         string="KYC Form / Company Financial Structure",
@@ -54,6 +77,13 @@ class CrmLead(models.Model):
         attachment=True
     )
     kyc_form_filename = fields.Char(string="File Name")
+    related_kyc_form_id = fields.Many2one(
+        "ir.attachment",
+        string="KYC Form / Company Financial Structure Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     annual_report = fields.Binary(
         string="Annual Report (Latest Available)",
@@ -61,6 +91,13 @@ class CrmLead(models.Model):
         attachment=True
     )
     annual_report_filename = fields.Char(string="File Name")
+    related_annual_report_id = fields.Many2one(
+        "ir.attachment",
+        string="Annual Report (Latest Available) Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     insurance_certificates = fields.Binary(
         string="Insurance Certificates",
@@ -68,6 +105,13 @@ class CrmLead(models.Model):
         attachment=True
     )
     insurance_certificates_filename = fields.Char(string="File Name")
+    related_insurance_certificates_id = fields.Many2one(
+        "ir.attachment",
+        string="Insurance Certificates Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     other_documents = fields.Binary(
         string="Other Documents",
@@ -75,11 +119,19 @@ class CrmLead(models.Model):
         attachment=True
     )
     other_documents_filename = fields.Char(string="File Name")
+    related_other_documents_id = fields.Many2one(
+        "ir.attachment",
+        string="Other Documents Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
 
     # bank related field: res.bank
     bank_name = fields.Char(string="Bank Name", tracking=True, required=True)
     bic = fields.Char(string='BIC Code', help="Bank BIC Code or SWIFT.", tracking=True, required=True)
     bank_country = fields.Many2one('res.country', string='Bank Country', tracking=True, required=True)
+    bank_id = fields.Many2one('res.partner.bank', string='Bank', tracking=True)
 
     # person wise bank field : res.partner.bank
     acc_number = fields.Char('Account Number', tracking=True, required=True)
@@ -130,6 +182,45 @@ class CrmLead(models.Model):
         attachment=True,
     )
     extra_documents_filename = fields.Char(string="File Name")
+
+    @api.depends(
+        "incorporation_certificate",
+        "bank_proof",
+        "master_agreement",
+        "kyc_form",
+        "annual_report",
+        "insurance_certificates",
+        "other_documents",
+    )
+    def _compute_related_authorization_attachment_ids(self):
+        Attachment = self.env["ir.attachment"].sudo()
+        # mapping: binary_field -> related_many2one_field
+        field_map = {
+            "incorporation_certificate": "related_incorporation_certificate_id",
+            "bank_proof": "related_bank_proof_id",
+            "master_agreement": "related_master_agreement_id",
+            "kyc_form": "related_kyc_form_id",
+            "annual_report": "related_annual_report_id",
+            "insurance_certificates": "related_insurance_certificates_id",
+            "other_documents": "related_other_documents_id",
+        }
+
+        for rec in self:
+            for bin_field, rel_field in field_map.items():
+                bin_value = getattr(rec, bin_field)
+                if bin_value:
+                    attachment = Attachment.search(
+                        [
+                            ("res_model", "=", rec._name),
+                            ("res_id", "=", rec.id),
+                            ("res_field", "=", bin_field),
+                        ],
+                        limit=1,
+                        order="create_date desc",
+                    )
+                    setattr(rec, rel_field, attachment or False)
+                else:
+                    setattr(rec, rel_field, False)
 
     def _notify_finance_team(self):
         """Notify Finance team when supplier registration is approved by Operations."""
@@ -200,15 +291,63 @@ class CrmLead(models.Model):
         for lead in self:
             if not lead.partner_id:
                 raise UserError("Cannot approve: Registration request has no linked partner.")
+            if not lead.bank_id:
+                raise UserError("Cannot approve: Registration request has no linked bank account.")
 
             lead.write({'state': 'approved'})
+            lead.partner_id.write({
+                'name': lead.partner_id.name or lead.name,
+                'street': lead.street,
+                'street2': lead.street2,
+                'city': lead.city,
+                'state_id': lead.state_id.id,
+                'zip': lead.zip,
+                'vat': lead.vat,
+                'country_id': lead.country_id.id,
+                'website': lead.website,
+                'email': lead.email_from,
+                'phone': lead.phone,
+                'supplier_rank': 1,
+                'property_payment_term_id': lead.payment_term_id.id,
+                'trading_name': lead.trading_name,
+                'registration_status': True,
+            })
 
-            lead.partner_id.registration_status = True
+            if lead.bank_id and lead.acc_number and lead.currency_id:
+                lead.partner_id.sudo().write({
+                    'bank_ids': [(0, 0, {
+                        'bank_id': lead.bank_id.id,
+                        'acc_number': lead.acc_number,
+                        'currency_id': lead.currency_id.id,
+                    })]
+                })
+
+            lead.partner_id.sudo().write({
+                'name': lead.partner_id.name or lead.name,
+                'street': lead.street,
+                'street2': lead.street2,
+                'city': lead.city,
+                'state_id': lead.state_id.id,
+                'zip': lead.zip,
+                'vat': lead.vat,
+                'country_id': lead.country_id.id,
+                'website': lead.website,
+                'email': lead.email_from,
+                'phone': lead.phone,
+                'lead_id': lead.id,
+                'supplier_rank': 1,
+                'business_type': lead.business_type,
+                'property_supplier_payment_term_id': lead.payment_term_id.id,
+                'trading_name': lead.trading_name,
+                'registration_status': True,
+            })
+
             lead.partner_id.grant_portal_access()
 
             # Send email notification to customer
             lead._notify_customer()
 
+            lead._create_child_contact(lead.partner_id)
             _logger.info(
                 "Supplier Registration %s (ID: %d) approved and portal access granted to partner %s.",
                 lead.name, lead.id, lead.partner_id.name)

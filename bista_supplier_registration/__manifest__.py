@@ -1,4 +1,5 @@
 # -*- encoding: utf-8 -*-
+
 {
     'name': "Bista Supplier Registration",
     'summary': """ Bista Supplier Registration (Zenter) """,
@@ -8,7 +9,7 @@
     'version': '18.0.1.0.0',
     'sequence': 1,
     'license': 'LGPL-3',
-    'depends': ['base', 'account', 'crm', 'website', 'purchase', 'bista_contact_customization'],
+    'depends': ['base', 'account', 'crm', 'website', 'purchase', 'sale', 'stock', 'product', 'bista_contact_customization'],
     'data': [
         "security/ir.model.access.csv",
         "security/supplier_security.xml",
@@ -21,6 +22,8 @@
         "views/vendor_form_templates.xml",
         "views/auth_signup_inherit.xml",
         "views/purchase_order_view.xml",
+        "views/sale_order_views.xml",
+        "views/stock_picking_views.xml",
         "views/contactus_template.xml",
         "wizard/supplier_reject_wizard_views.xml",
     ],
