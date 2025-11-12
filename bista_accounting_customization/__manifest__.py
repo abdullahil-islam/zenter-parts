@@ -15,7 +15,7 @@
         - Enhanced product search with OEM tags
     """,
     'author': "Bista Solutions",
-    'website': "https://www.yourcompany.com",
+    'website': 'https://www.bistasolutions.com',
 
     'category': 'Accounting/Accounting',
     'version': '0.2',
@@ -33,7 +33,7 @@
         'views/product_category_views.xml',
         'views/res_users_views.xml',
         'views/hr_department_views.xml',
-        'views/res_country_group_views.xml',  # Added
+        # 'views/res_country_group_views.xml',  # Added
     ],
 
     'assets': {

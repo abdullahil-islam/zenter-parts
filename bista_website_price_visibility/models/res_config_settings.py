@@ -1,24 +1,4 @@
 # -*- coding: utf-8 -*-
-################################################################################
-#
-#    Cybrosys Technologies Pvt. Ltd.
-#
-#    Copyright (C) 2024-TODAY Cybrosys Technologies(<https://www.cybrosys.com>).
-#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
-#
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
-#
-#    You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
-#    (AGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-################################################################################
 from odoo import api, fields, models, Command
 
 
@@ -46,11 +26,6 @@ class ResConfigSettings(models.TransientModel):
         string='Websites',
         help="Select the websites where price and cart should be hidden for guest users"
     )
-    hide_cart = fields.Boolean(
-        string='Hide Cart',
-        config_parameter='website_hide_button.hide_cart',
-        help="If enabled, the Add to Cart button and Cart Icon will be hidden from guest users"
-    )
 
     def set_values(self):
         """Method for setting the parameters"""
@@ -58,7 +33,6 @@ class ResConfigSettings(models.TransientModel):
         params = self.env['ir.config_parameter'].sudo()
 
         params.set_param('website_hide_button.hide_price', self.hide_price)
-        params.set_param('website_hide_button.hide_cart', self.hide_cart)
         params.set_param('website_hide_button.hide_type', self.hide_type)
 
         # Store website_ids as comma-separated string
@@ -72,7 +46,6 @@ class ResConfigSettings(models.TransientModel):
         params = self.env['ir.config_parameter'].sudo()
 
         hide_price = params.get_param('website_hide_button.hide_price', default=False)
-        hide_cart = params.get_param('website_hide_button.hide_cart', default=False)
         hide_type = params.get_param('website_hide_button.hide_type', default='all')
         website_ids_str = params.get_param('website_hide_button.website_ids', default='')
 
@@ -86,7 +59,6 @@ class ResConfigSettings(models.TransientModel):
 
         res.update({
             'hide_price': hide_price,
-            'hide_cart': hide_cart,
             'hide_type': hide_type,
             'website_ids': [(6, 0, website_ids)],
         })
@@ -97,19 +69,9 @@ class ResConfigSettings(models.TransientModel):
         """Method to get hide settings for current website"""
         params = self.env['ir.config_parameter'].sudo()
         hide_price = params.get_param('website_hide_button.hide_price')
-        hide_cart = params.get_param('website_hide_button.hide_cart')
         return {
             'hide_price': hide_price,
-            'hide_cart': hide_cart,
         }
-
-    @api.onchange('hide_price')
-    def _onchange_hide_price(self):
-        """Auto-enable hide_cart when hide_price is enabled"""
-        if self.hide_price:
-            self.hide_cart = True
-        else:
-            self.hide_cart = False
 
     @api.onchange('hide_type')
     def _onchange_hide_type(self):

@@ -127,11 +127,25 @@ class CrmLead(models.Model):
         copy=False,
     )
 
+    extra_documents = fields.Binary(
+        string="Extra Documents",
+        help="Upload any additional supporting files or reference documents.",
+        attachment=True
+    )
+    extra_documents_filename = fields.Char(string="File Name")
+    related_extra_documents_id = fields.Many2one(
+        "ir.attachment",
+        string="Extra Documents Attachment",
+        compute="_compute_related_authorization_attachment_ids",
+        store=True,
+        copy=False,
+    )
+
     # bank related field: res.bank
     bank_name = fields.Char(string="Bank Name", tracking=True, required=True)
     bic = fields.Char(string='BIC Code', help="Bank BIC Code or SWIFT.", tracking=True, required=True)
     bank_country = fields.Many2one('res.country', string='Bank Country', tracking=True, required=True)
-    bank_id = fields.Many2one('res.partner.bank', string='Bank', tracking=True)
+    bank_id = fields.Many2one('res.bank', string='Bank', tracking=True)
 
     # person wise bank field : res.partner.bank
     acc_number = fields.Char('Account Number', tracking=True, required=True)
@@ -176,12 +190,23 @@ class CrmLead(models.Model):
 
     rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
     extra_info = fields.Text(string="Extra Information", help="Provide any additional details.", tracking=True)
-    extra_documents = fields.Binary(
-        string="Extra Documents",
-        help="Upload any additional supporting files or reference documents",
-        attachment=True,
-    )
-    extra_documents_filename = fields.Char(string="File Name")
+
+    has_state = fields.Boolean(string='Has State', compute='_compute_has_state')
+
+    @api.onchange('country_id')
+    def _onchange_country_id(self):
+        if self.country_id and self.country_id != self.state_id.country_id:
+            self.state_id = False
+
+    @api.depends('country_id')
+    def _compute_has_state(self):
+        """ Compute field to check if the lead has a state """
+        for rec in self:
+            rec.has_state = False
+            if rec.country_id:
+                state_id = self.env['res.country.state'].search([('country_id', '=', rec.country_id.id)], limit=1)
+                if state_id:
+                    rec.has_state = True
 
     @api.depends(
         "incorporation_certificate",
@@ -191,6 +216,7 @@ class CrmLead(models.Model):
         "annual_report",
         "insurance_certificates",
         "other_documents",
+        "extra_documents",
     )
     def _compute_related_authorization_attachment_ids(self):
         Attachment = self.env["ir.attachment"].sudo()
@@ -203,6 +229,7 @@ class CrmLead(models.Model):
             "annual_report": "related_annual_report_id",
             "insurance_certificates": "related_insurance_certificates_id",
             "other_documents": "related_other_documents_id",
+            "extra_documents": "related_extra_documents_id",
         }
 
         for rec in self:
@@ -347,7 +374,8 @@ class CrmLead(models.Model):
             # Send email notification to customer
             lead._notify_customer()
 
-            lead._create_child_contact(lead.partner_id)
+            lead._create_finance_child_contact(lead.partner_id)
+            lead._create_operational_child_contact(lead.partner_id)
             _logger.info(
                 "Supplier Registration %s (ID: %d) approved and portal access granted to partner %s.",
                 lead.name, lead.id, lead.partner_id.name)

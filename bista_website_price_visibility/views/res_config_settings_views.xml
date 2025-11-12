@@ -12,8 +12,8 @@
 
                 <!-- Hide Product Prices Setting -->
                 <setting id="show_price_setting"
-                         string="Hide Product Prices for Guests"
-                         help="Hides product prices from guest users in Website">
+                         string="Hide Product Prices for Users"
+                         help="Hides product prices from users in Website">
                     <field name="hide_price"/>
 
                     <!-- Content group that appears when hide_price is enabled -->
@@ -38,13 +38,13 @@
                         <!-- Info message for All Websites -->
                         <div class="alert alert-info mt16" invisible="hide_type != 'all'">
                             <i class="fa fa-info-circle"/>
-                            <span> Product prices and cart will be hidden for guest users on <strong>all websites</strong>.</span>
+                            <span> Product prices will be hidden for the users on <strong>all websites</strong>.</span>
                         </div>
 
                         <!-- Info message for Selected Websites -->
                         <div class="alert alert-info mt16" invisible="hide_type != 'selected' or not website_ids">
                             <i class="fa fa-info-circle"/>
-                            <span> Product prices and cart will be hidden for guest users on <strong>selected websites only</strong>.</span>
+                            <span> Product prices will be hidden for the users on <strong>selected websites only</strong>.</span>
                         </div>
 
                         <!-- Warning message when no websites selected -->
@@ -54,44 +54,7 @@
                         </div>
                     </div>
                 </setting>
-
-                <!-- Hide Cart Setting -->
-                <setting id="show_cart_setting"
-                         string="Hide Cart from Guests"
-                         help="Hide 'Add to Cart' button and Cart quick view for Guest users">
-                    <field name="hide_cart" readonly="hide_price == True"/>
-
-                    <!-- Info note about automatic enabling -->
-                    <div class="text-muted mt8" invisible="hide_price == False">
-                        <small>
-                            <i class="fa fa-info-circle"/>
-                            This option is automatically enabled when "Hide Product Prices" is enabled.
-                        </small>
-                    </div>
-                </setting>
-
             </block>
         </field>
     </record>
-<!--    <record id="res_config_settings_view_form" model="ir.ui.view">-->
-<!--        <field name="name">-->
-<!--            res.config.settings.view.form.inherit.website.hide.button-->
-<!--        </field>-->
-<!--        <field name="model">res.config.settings</field>-->
-<!--        <field name="inherit_id" ref="website.res_config_settings_view_form"/>-->
-<!--        <field name="arch" type="xml">-->
-<!--            <block id="sale_product_catalog_settings" position="inside">-->
-<!--                <setting id="show_price_setting"-->
-<!--                         string="Hide Product Prices for Guests"-->
-<!--                         help="Hides product prices from guest users in Website">-->
-<!--                    <field name="hide_price"/>-->
-<!--                </setting>-->
-<!--                -->
-<!--                <setting id="show_cart_setting" string="Hide Cart from Guests"-->
-<!--                         help="Hide 'Add to Cart' button and Cart quick view for Guest users">-->
-<!--                    <field name="hide_cart" readonly="hide_price"/>-->
-<!--                </setting>-->
-<!--            </block>-->
-<!--        </field>-->
-<!--    </record>-->
 </odoo>

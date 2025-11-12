@@ -1,0 +1,23 @@
+<?xml version = "1.0" encoding = "UTF-8" ?>
+<odoo>
+    <!-- Hide product price for Guest users  -->
+    <template id="products_item" inherit_id="website_sale.products_item">
+        <xpath expr="//div[hasclass('product_price')]" position="attributes">
+            <attribute name="t-if">show_price</attribute>
+        </xpath>
+    </template>
+
+    <!--    Hide product price in wishlist page-->
+    <template id="product_wishlist_price_hide" inherit_id="website_sale_wishlist.product_wishlist">
+        <xpath expr="//td[hasclass('o_wish_price')]" position="replace">
+            <td class="align-middle o_wish_price" t-elif="show_price">
+                <t t-out="combination_info['price']"
+                   t-options="{'widget': 'monetary', 'display_currency': website.currency_id}"/>
+                <small t-if="combination_info['base_unit_price']" class="cart_product_base_unit_price d-block text-muted" groups="website_sale.group_show_uom_price">
+                    <t t-call='website_sale.base_unit_price'><t t-set='product' t-value='wish.product_id' /></t>
+                </small>
+            </td>
+<!--            <td t-else=""/>-->
+        </xpath>
+    </template>
+</odoo>

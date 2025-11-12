@@ -24,50 +24,6 @@ class CrmLead(models.Model):
         compute="_compute_can_reject_customer",
         store=False
     )
-    # customer contact field
-    # customer_contact_name = fields.Char(
-    #     string="Contact Name", tracking=True, help="Primary contact person for the customer")
-    # customer_contact_phone = fields.Char(
-    #     string="Contact Phone", tracking=True, help="Phone number of the primary customer contact")
-    # customer_contact_email = fields.Char(
-    #     string="Contact Email", tracking=True, help="Email address of the primary customer contact")
-
-    # documents related field
-    # address_proof = fields.Binary(
-    #     string="Address Proof",
-    #     help="Upload Address Proof verification documents.",
-    #     attachment=True
-    # )
-    # address_proof_filename = fields.Char(string="File Name")
-    #
-    # master_agreement = fields.Binary(
-    #     string="Signed Master Agreement / Framework",
-    #     help="Upload the signed Master Agreement or Framework contract.",
-    #     attachment=True
-    # )
-    # master_agreement_filename = fields.Char(string="File Name")
-    #
-    # kyc_form = fields.Binary(
-    #     string="KYC Form / Company Financial Structure",
-    #     help="Upload  Customer (KYC) documents or financial structure details.",
-    #     attachment=True
-    # )
-    # kyc_form_filename = fields.Char(string="File Name")
-    #
-    # other_documents = fields.Binary(
-    #     string="Other Documents",
-    #     help="Upload any other relevant documents not covered in the fields above.",
-    #     attachment=True
-    # )
-    # other_documents_filename = fields.Char(string="File Name")
-    # rejection_reason = fields.Text(string="Rejection Reason", tracking=True)
-    # extra_info = fields.Text(string="Extra Information", help="Provide any additional details.", tracking=True)
-    # extra_documents = fields.Binary(
-    #     string="Extra Documents",
-    #     help="Upload any additional supporting files or reference documents",
-    #     attachment=True,
-    # )
-    # extra_documents_filename = fields.Char(string="File Name")
     payment_condition = fields.Char(string="Payment Condition")
     price_list_discount = fields.Char(string="Price List Discount")
 
@@ -125,14 +81,15 @@ class CrmLead(models.Model):
 
             lead.partner_id.grant_portal_access()
 
-            lead._create_child_contact(lead.partner_id)
+            lead._create_finance_child_contact(lead.partner_id)
+            lead._create_operational_child_contact(lead.partner_id)
             _logger.info(
                 "Customer Registration %s (ID: %d) approved and portal access granted to partner %s.",
                 lead.name, lead.id, lead.partner_id.name)
 
-    def _create_child_contact(self, partner):
+    def _create_finance_child_contact(self, partner):
         """
-        Create a child contact under the given partner using customer contact fields
+        Create a finance child contact under the given partner using customer contact fields
         """
         if not (self.finance_name or self.finance_phone or self.finance_email):
             return
@@ -143,6 +100,21 @@ class CrmLead(models.Model):
             'phone': self.finance_phone,
             'email': self.finance_email,
             'function': self.finance_position,
+        })
+
+    def _create_operational_child_contact(self, partner):
+        """
+        Create a operational child contact under the given partner using customer contact fields
+        """
+        if not (self.operational_name or self.operational_phone or self.operational_email):
+            return
+        self.env['res.partner'].create({
+            'parent_id': partner.id,
+            'type': 'contact',
+            'name': self.operational_name,
+            'phone': self.operational_phone,
+            'email': self.operational_email,
+            'function': self.operational_position,
         })
 
     def action_reject_customer(self):

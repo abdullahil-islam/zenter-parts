@@ -1,27 +1,9 @@
 # -*- coding: utf-8 -*-
-################################################################################
-#
-#    Cybrosys Technologies Pvt. Ltd.
-#
-#    Copyright (C) 2024-TODAY Cybrosys Technologies(<https://www.cybrosys.com>).
-#    Author: Cybrosys Techno Solutions(<https://www.cybrosys.com>)
-#
-#    You can modify it under the terms of the GNU AFFERO
-#    GENERAL PUBLIC LICENSE (AGPL v3), Version 3.
-#
-#    This program is distributed in the hope that it will be useful,
-#    but WITHOUT ANY WARRANTY; without even the implied warranty of
-#    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-#    GNU AFFERO GENERAL PUBLIC LICENSE (AGPL v3) for more details.
-#
-#    You should have received a copy of the GNU AFFERO GENERAL PUBLIC LICENSE
-#    (AGPL v3) along with this program.
-#    If not, see <http://www.gnu.org/licenses/>.
-#
-###############################################################################
+
 from odoo import http
 from odoo.http import request
 from odoo.addons.website_sale.controllers.main import WebsiteSale
+from odoo.addons.website_sale_wishlist.controllers.main import WebsiteSaleWishlist
 
 class WebsiteSaleInherit(WebsiteSale):
     """class to hide price, add to cart and quantity"""
@@ -94,3 +76,14 @@ class WebsiteSaleInherit(WebsiteSale):
             res = super(WebsiteSaleInherit, self).shop_payment(**post)
             return res
         return request.redirect("/")
+
+
+class WebsiteSaleWishlistInherit(WebsiteSaleWishlist):
+    @http.route('/shop/wishlist', type='http', auth='public', website=True, sitemap=False)
+    def get_wishlist(self, count=False, **kw):
+        res = super().get_wishlist(count, **kw)
+        Wsale = WebsiteSaleInherit()
+        res.qcontext.update({
+            'show_price': Wsale.should_show_price_for_current_website()  # True = show, False = hide
+        })
+        return res

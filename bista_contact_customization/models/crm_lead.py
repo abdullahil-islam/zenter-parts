@@ -8,23 +8,6 @@ class CrmLead(models.Model):
     _inherit = "crm.lead"
     _order = "create_date desc"
 
-    allowed_state_ids = fields.Many2many(
-        'res.country.state',
-        string='Allowed States',
-        compute='_compute_allowed_states',
-        store=True
-    )
-
-    @api.depends('country_id')
-    def _compute_allowed_states(self):
-        for rec in self:
-            if rec.country_id:
-                rec.allowed_state_ids = rec.env['res.country.state'].search([
-                    ('country_id', '=', rec.country_id.id)
-                ])
-            else:
-                rec.allowed_state_ids = rec.env['res.country.state'].search([])
-
     def _assign_and_deactivate_partner(self):
         """Create a partner from contact registration data, link it to the lead"""
         for lead in self:
