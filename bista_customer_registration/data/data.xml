@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="1">
+    <data noupdate="0">
         <record id="customer_reference_sequence" model="ir.sequence">
             <field name="name">customer reference sequence</field>
             <field name="code">crm.lead.customer.reference</field>
@@ -8,6 +8,15 @@
             <field name="padding">5</field>
             <field name="number_next">1</field>
             <field name="number_increment">1</field>
+        </record>
+
+        <record id="seq_crm_lead_distributor" model="ir.sequence">
+            <field name="name">Distributor Registration Sequence</field>
+            <field name="code">crm.lead.distributor.reference</field>
+            <field name="prefix">DR-</field>
+            <field name="padding">5</field>
+            <field name="number_increment">1</field>
+            <field name="number_next">1</field>
         </record>
     </data>
 </odoo>

@@ -226,7 +226,7 @@ class CorporateTravel(models.Model):
             raise ValidationError('Only Finance Director can approve here.')
         for rec in self:
             missing_vendor_lines = rec.line_ids.filtered(
-                lambda line: not line.vendor_id
+                lambda line: not line.vendor_id and line.payment_mode == 'company_account'
             )
 
             if missing_vendor_lines:

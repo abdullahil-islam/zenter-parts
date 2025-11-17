@@ -1,14 +1,16 @@
 # -*- coding: utf-8 -*-
+
 {
     'name': "Hide Price In Website",
-    'version': '18.0.1.0.1',
+    'version': '18.0.1.0.0',
     'category': 'Website',
+    'sequence': 1,
     'summary': """Hide Price for users in website""",
     'description': """User cannot see Price of the Product in shop page and Price of the Product""",
-    'author': 'Bista Solutions',
-    'company': 'Bista Solutions',
-    'maintainer': 'Bista Solutions',
+    'author': 'Bista Solutions Inc.',
     'website': 'https://www.bistasolutions.com',
+    'company': 'Bista Solutions Inc.',
+    'maintainer': 'Bista Solutions Inc.',
     'depends': ['website_sale', 'website_sale_comparison', 'website_sale_wishlist'],
     'data': [
         'views/product_templates.xml',

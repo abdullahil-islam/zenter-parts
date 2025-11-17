@@ -1,6 +1,9 @@
 import base64
+import logging
 from odoo import http
 from odoo.http import request
+
+_logger = logging.getLogger(__name__)
 
 class VendorRegistrationController(http.Controller):
 
@@ -9,6 +12,13 @@ class VendorRegistrationController(http.Controller):
         state_ids = request.env['res.country.state'].sudo().search([])
         country_ids = request.env['res.country'].sudo().search([])
         currency_ids = request.env['res.currency'].sudo().search([])
+
+        reg_type = kwargs.get('reg_type', 'customer')
+        ALLOWED_REG_TYPES = ['customer', 'distributor']
+        if reg_type not in ALLOWED_REG_TYPES:
+            reg_type = 'customer'  # Default to safe value
+        _logger.warning(f"Invalid reg_type '{kwargs.get('reg_type')}' received, defaulting to 'customer'")
+
         qcontext = {
             "business_types": [
                 ("manufacturer", "Manufacturer"),
@@ -19,6 +29,7 @@ class VendorRegistrationController(http.Controller):
             'state_ids': state_ids,
             'country_ids': country_ids,
             'currency_ids': currency_ids,
+            'reg_type': reg_type,
         }
         return request.render("bista_customer_registration.customer_apply", qcontext)
 
@@ -36,6 +47,7 @@ class VendorRegistrationController(http.Controller):
             f = files.get(name)
             return f.filename if f and getattr(f, "filename", "") else False
 
+        reg_type = post.get('reg_type', 'customer')
         # 1) Create application record
         vals = {
             # Section 1
@@ -80,13 +92,15 @@ class VendorRegistrationController(http.Controller):
             "master_agreement": _bin("doc_master_agreement"),
             "master_agreement_filename": _filename("doc_master_agreement"),
             "kyc_form": _bin("doc_kyc_form"),
-            "kyc_form_filename": _filename("doc_kyc_form")
+            "kyc_form_filename": _filename("doc_kyc_form"),
+            "distributor_or_customer": reg_type,
         }
 
         # 3) Ensure we have a tag "Vendor Application"
-        tag = request.env["crm.tag"].sudo().search([("name", "=", "Customer Application")], limit=1)
+        tag_name = "Distributor Application" if reg_type == 'distributor' else "Customer Application"
+        tag = request.env["crm.tag"].sudo().search([("name", "=", tag_name)], limit=1)
         if not tag:
-            tag = request.env["crm.tag"].sudo().create({"name": "Customer Application"})
+            tag = request.env["crm.tag"].sudo().create({"name": tag_name})
 
         # Optionally pick a team. If you want a specific one, set its ID here.
         # team_id = request.env["crm.team"].sudo().search([], limit=1).id or False

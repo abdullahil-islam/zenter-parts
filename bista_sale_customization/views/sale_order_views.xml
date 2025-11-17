@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        
+        <!-- Add backorder_qty field to sale order line tree view -->
+        <record id="view_order_form_backorder_qty" model="ir.ui.view">
+            <field name="name">sale.order.form.backorder.qty</field>
+            <field name="model">sale.order</field>
+            <field name="inherit_id" ref="sale.view_order_form"/>
+            <field name="arch" type="xml">
+                
+                <!-- Add backorder_qty column after qty_delivered in order lines -->
+                <xpath expr="//field[@name='order_line']/list/field[@name='qty_delivered']" position="after">
+                    <field name="backorder_qty" optional="show"/>
+                </xpath>
+                
+            </field>
+        </record>
+    </data>
+</odoo>

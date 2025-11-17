@@ -4,10 +4,10 @@
         <!-- Add professional buttons before the lead paragraph -->
         <xpath expr="//p[@class='lead']" position="before">
             <div class="d-flex gap-3 mb-4 flex-wrap">
-                <a href="/vendor/apply" class="btn btn-lg btn-outline-primary d-flex align-items-center">
-                    <span>Join As Supplier</span>
+                <a href="/customer/apply?reg_type=distributor" class="btn btn-lg btn-outline-primary d-flex align-items-center">
+                    <span>Join As Distributor</span>
                 </a>
-                <a href="/customer/apply" class="btn btn-lg btn-outline-primary d-flex align-items-center">
+                <a href="/customer/apply?reg_type=customer" class="btn btn-lg btn-outline-primary d-flex align-items-center">
                     <span>Join As Customer</span>
                 </a>
             </div>

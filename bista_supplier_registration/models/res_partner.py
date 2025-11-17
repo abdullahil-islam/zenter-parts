@@ -52,4 +52,5 @@ class ResPartner(models.Model):
                 active_ids=[partner.id]).create({})
 
             portal_wizard_user = portal_wizard.user_ids
-            portal_wizard_user.action_grant_access()
+            for user in portal_wizard_user:
+                user.action_grant_access()

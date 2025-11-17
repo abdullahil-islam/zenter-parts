@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
-{
-    'name': "bista_accounting_customization",
 
+{
+    'name': "Accounting Customization",
+    'license': 'LGPL-3',
     'summary': "Custom accounting enhancements and analytical features for Odoo",
     'description': """
         Provides custom accounting and analytical enhancements in Odoo,
@@ -14,12 +15,14 @@
         - User and department distribution
         - Enhanced product search with OEM tags
     """,
-    'author': "Bista Solutions",
+    'author': 'Bista Solutions Inc.',
     'website': 'https://www.bistasolutions.com',
+    'company': 'Bista Solutions Inc.',
+    'maintainer': 'Bista Solutions Inc.',
 
     'category': 'Accounting/Accounting',
-    'version': '0.2',
-
+    'version': '18.0.1.0.0',
+    'sequence': 1,
     # any module necessary for this one to work correctly
     'depends': ['base', 'account', 'analytic', 'product', 'hr', 'website_sale'],
 
@@ -33,7 +36,8 @@
         'views/product_category_views.xml',
         'views/res_users_views.xml',
         'views/hr_department_views.xml',
-        # 'views/res_country_group_views.xml',  # Added
+        'views/country_group_analytic_distribution_views.xml',
+        'views/res_country_group_views.xml',
     ],
 
     'assets': {

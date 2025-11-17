@@ -4,36 +4,38 @@ from odoo import models, fields, api
 
 
 class ResCountryGroup(models.Model):
-    _name = 'res.country.group'
-    _inherit = ['res.country.group', 'analytic.mixin']
+    _inherit = 'res.country.group'
 
-    analytic_distribution = fields.Json(
-        string="Analytic Distribution",
-        help="Default analytic distribution for partners in this country group"
+    analytic_distribution_ids = fields.One2many(
+        'country.group.analytic.distribution',
+        'country_group_id',
+        string='Analytic Distributions',
+        help='Company-specific analytic distributions for this country group'
     )
-    
-    # Add hierarchy support for regional groupings
-    # parent_group_id = fields.Many2one(
-    #     'res.country.group',
-    #     string='Parent Region',
-    #     help='Parent region for hierarchical regional distribution'
-    # )
-    # child_group_ids = fields.One2many(
-    #     'res.country.group',
-    #     'parent_group_id',
-    #     string='Sub-regions'
-    # )
-    
-    def get_hierarchical_distribution(self):
+
+    analytic_distribution_count = fields.Integer(
+        string='Distribution Count',
+        compute='_compute_analytic_distribution_count'
+    )
+
+    @api.depends('analytic_distribution_ids')
+    def _compute_analytic_distribution_count(self):
+        for group in self:
+            group.analytic_distribution_count = len(group.analytic_distribution_ids)
+
+    def get_analytic_distribution(self, company_id=None):
         """
-        Get analytic distribution including parent hierarchy.
-        Child distributions override parent distributions.
+        Get analytic distribution for this country group in a specific company.
+
+        Args:
+            company_id: ID of the company (defaults to current company)
+
+        Returns:
+            dict: Analytic distribution or empty dict
         """
         self.ensure_one()
-        distribution = {}
-        
-        # Apply current level (overrides parent)
-        if self.analytic_distribution:
-            distribution.update(self.analytic_distribution)
-        
-        return distribution
+        if not company_id:
+            company_id = self.env.company.id
+
+        DistributionModel = self.env['country.group.analytic.distribution'].sudo()
+        return DistributionModel.get_distribution_for_country_group(self.id, company_id)

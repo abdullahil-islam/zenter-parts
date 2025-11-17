@@ -42,7 +42,7 @@
                             invisible="customer_state not in ['accounts']"
                             groups="bista_customer_registration.group_customer_accounts"/>
                     <button name="action_reject_customer" type="object" class="oe_highlight" string="Reject"
-                            invisible="can_reject_customer == False"/>
+                            invisible="can_reject_customer == False"
                             groups="bista_customer_registration.group_customer_finance,bista_customer_registration.group_customer_commercial,bista_customer_registration.group_customer_accounts"/>
                     <button name="action_reset_to_finance_customer" class="oe_highlight" type="object"
                             string="Reset to Finance" invisible="customer_state not in ['rejected']"/>
@@ -96,6 +96,8 @@
                             </div>
                             <field name="website" widget="url" placeholder="e.g. https://www.odoo.com"
                                    readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="is_customer_reg" readonly="1" force_save="1" invisible="1"/>
+                            <field name="distributor_or_customer" invisible="1" readonly="1" force_save="1"/>
                         </group>
 
                         <!-- Financial & Banking Details -->
@@ -122,15 +124,21 @@
 
                     <group>
                         <group string="Primary Contact (Finance/Admin)">
-                            <field name="finance_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
-                            <field name="finance_phone" readonly="customer_state in ['approved', 'locked']" required="1"/>
-                            <field name="finance_email" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="finance_name" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
+                            <field name="finance_phone" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
+                            <field name="finance_email" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
                             <field name="finance_position" readonly="customer_state in ['approved', 'locked']"/>
                         </group>
                         <group string="Primary Contact (Operational)">
-                            <field name="operational_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
-                            <field name="operational_phone" readonly="customer_state in ['approved', 'locked']" required="1"/>
-                            <field name="operational_email" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="operational_name" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
+                            <field name="operational_phone" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
+                            <field name="operational_email" readonly="customer_state in ['approved', 'locked']"
+                                   required="1"/>
                             <field name="operational_position" readonly="customer_state in ['approved', 'locked']"/>
                         </group>
                     </group>
@@ -206,12 +214,36 @@
         <field name="res_model">crm.lead</field>
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_customer_register_search"/>
-        <field name="domain">[('is_customer_reg', '=', True)]</field>
-        <field name="context">{'is_customer_reg': True}</field>
+        <field name="domain">[('is_customer_reg', '=', True), ('distributor_or_customer', '=', 'customer')]</field>
+        <field name="context">{'is_customer_reg': True, 'default_distributor_or_customer': 'customer'}</field>
         <field name="view_ids" eval="[(5, 0, 0),
         (0, 0, {'view_mode': 'list', 'view_id': ref('bista_customer_registration.view_customer_register_tree')}),
         (0, 0, {'view_mode': 'form', 'view_id': ref('bista_customer_registration.view_customer_register_form')})
     ]"/>
+    </record>
+
+    <record id="action_distributor_registrations" model="ir.actions.act_window">
+        <field name="name">Distributor Applications</field>
+        <field name="res_model">crm.lead</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">[('is_customer_reg', '=', True), ('distributor_or_customer', '=', 'distributor')]</field>
+        <field name="context">{
+            'default_is_customer_reg': True,
+            'default_distributor_or_customer': 'distributor'
+            }
+        </field>
+        <field name="view_ids" eval="[(5, 0, 0),
+                (0, 0, {'view_mode': 'list', 'view_id': ref('bista_customer_registration.view_customer_register_tree')}),
+                (0, 0, {'view_mode': 'form', 'view_id': ref('bista_customer_registration.view_customer_register_form')})
+            ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Distributor Registration
+            </p>
+            <p>
+                View and manage all distributor registration applications.
+            </p>
+        </field>
     </record>
 
     <!-- Parent Menu (Top-level app like CRM) -->
@@ -222,10 +254,15 @@
 
     <!-- First Child Menu -->
     <menuitem id="menu_customer_register_main"
-              name="Customer Records"
+              name="Customer Applications"
               parent="menu_customer_register_root"
               action="action_customer_register"
               sequence="11"/>
+    <menuitem id="menu_distributor_registrations"
+              name="Distributor Applications"
+              parent="menu_customer_register_root"
+              action="action_distributor_registrations"
+              sequence="20"/>
 
     <record id="bista_customer_registration.menu_customer_register_root" model="ir.ui.menu">
         <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
@@ -235,6 +272,13 @@
     </record>
 
     <record id="bista_customer_registration.menu_customer_register_main" model="ir.ui.menu">
+        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
+            ref('bista_customer_registration.group_customer_finance'),
+            ref('bista_customer_registration.group_customer_commercial'),
+            ref('bista_customer_registration.group_customer_accounts')])]"/>
+    </record>
+
+    <record id="bista_customer_registration.menu_distributor_registrations" model="ir.ui.menu">
         <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
             ref('bista_customer_registration.group_customer_finance'),
             ref('bista_customer_registration.group_customer_commercial'),

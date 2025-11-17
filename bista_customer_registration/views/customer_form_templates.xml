@@ -5,13 +5,16 @@
             <div class="container py-5 o-vendor-form">
                 <!-- Title -->
                 <div class="text-center mb-5">
-                    <h1 class="display-6 fw-semibold mb-2">Customer Registration</h1>
+                    <h1 class="display-6 fw-semibold mb-2" t-if="reg_type == 'distributor'">Distributor Registration</h1>
+                    <h1 class="display-6 fw-semibold mb-2" t-else="">Customer Registration</h1>
                     <p class="text-muted">Please complete all required fields (<span class="text-danger">*</span>).
                     </p>
                 </div>
 
                 <form action="/customer/submit" method="post" enctype="multipart/form-data" class="needs-validation">
                     <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                    <!-- Hidden field to track registration type -->
+                    <input type="hidden" name="reg_type" t-att-value="reg_type"/>
 
                     <!-- SECTION 1 -->
                     <div class="card section-card mb-4 shadow-sm">

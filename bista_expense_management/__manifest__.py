@@ -1,10 +1,14 @@
 
 {
     'name': 'Corporate Travel Approval',
-    'version': '1.0.0',
+    'version': '18.0.1.0.0',
     'summary': 'Estimate and approve corporate travel costs (MD -> FD approvals)',
-    'description': 'Corporate travel request form with multi-level approval and expense creation.',
-    'author': "Bista Solutions",
+    'sequence': 1,
+    'description': """Corporate travel request form with multi-level approval and expense creation.""",
+    'author': 'Bista Solutions Inc.',
+    'website': 'https://www.bistasolutions.com',
+    'company': 'Bista Solutions Inc.',
+    'maintainer': 'Bista Solutions Inc.',
     'category': 'Human Resources/Expenses',
     'depends': ['base', 'mail', 'hr', 'hr_expense'],
     'data': [

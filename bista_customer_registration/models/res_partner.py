@@ -11,3 +11,8 @@ class ResPartner(models.Model):
         string="Extra Documents",
         related="lead_id.related_extra_documents_id.datas",
     )
+    distributor_or_customer = fields.Selection(
+        [('distributor', 'Distributor'), ('customer', 'Customer')],
+        string='Registration Type',
+        help='Type of registration: Distributor or Customer'
+    )

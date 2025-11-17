@@ -29,24 +29,5 @@ import publicWidget from "@web/legacy/js/public/public_widget";
             el.classList.add("show");
             el.style.display = "block";
         }
-    },
-//    _onSelectCustomer: function () {
-//        if (this._modal) this._modal.hide();
-//        else {
-//            const el = document.getElementById("ssfSignupChoiceModal");
-//            if (el) { el.classList.remove("show"); el.style.display = "none"; }
-//        }
-//    },
-//    start: async function () {
-//        await this._super(...arguments);
-//
-//        if($("#ssfSignupChoiceModal").length > 0) {
-//            $("#ssfSignupChoiceModal").modal("show");
-//        }
-//    },
-//    _onSelectCustomer: function() {
-//        if($("#ssfSignupChoiceModal").length > 0) {
-//            $("#ssfSignupChoiceModal").modal("hide");
-//        }
-//    }
+    }
 })

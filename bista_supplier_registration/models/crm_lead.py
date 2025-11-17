@@ -322,60 +322,13 @@ class CrmLead(models.Model):
                 raise UserError("Cannot approve: Registration request has no linked bank account.")
 
             lead.write({'state': 'approved'})
-            lead.partner_id.write({
-                'name': lead.partner_id.name or lead.name,
-                'street': lead.street,
-                'street2': lead.street2,
-                'city': lead.city,
-                'state_id': lead.state_id.id,
-                'zip': lead.zip,
-                'vat': lead.vat,
-                'country_id': lead.country_id.id,
-                'website': lead.website,
-                'email': lead.email_from,
-                'phone': lead.phone,
-                'supplier_rank': 1,
-                'property_payment_term_id': lead.payment_term_id.id,
-                'trading_name': lead.trading_name,
-                'registration_status': True,
-            })
-
-            if lead.bank_id and lead.acc_number and lead.currency_id:
-                lead.partner_id.sudo().write({
-                    'bank_ids': [(0, 0, {
-                        'bank_id': lead.bank_id.id,
-                        'acc_number': lead.acc_number,
-                        'currency_id': lead.currency_id.id,
-                    })]
-                })
-
-            lead.partner_id.sudo().write({
-                'name': lead.partner_id.name or lead.name,
-                'street': lead.street,
-                'street2': lead.street2,
-                'city': lead.city,
-                'state_id': lead.state_id.id,
-                'zip': lead.zip,
-                'vat': lead.vat,
-                'country_id': lead.country_id.id,
-                'website': lead.website,
-                'email': lead.email_from,
-                'phone': lead.phone,
-                'lead_id': lead.id,
-                'supplier_rank': 1,
-                'business_type': lead.business_type,
-                'property_supplier_payment_term_id': lead.payment_term_id.id,
-                'trading_name': lead.trading_name,
-                'registration_status': True,
-            })
-
+            lead.partner_id.write({'registration_status': True,})
+            child = self.env['res.partner'].search([('parent_id', '=', lead.partner_id.id)])
+            if child:
+                child.sudo().write({'registration_status': True})
             lead.partner_id.grant_portal_access()
-
-            # Send email notification to customer
             lead._notify_customer()
 
-            lead._create_finance_child_contact(lead.partner_id)
-            lead._create_operational_child_contact(lead.partner_id)
             _logger.info(
                 "Supplier Registration %s (ID: %d) approved and portal access granted to partner %s.",
                 lead.name, lead.id, lead.partner_id.name)
@@ -417,18 +370,49 @@ class CrmLead(models.Model):
         for lead in self:
             lead.write({'state': 'locked'})
 
-    def _assign_and_deactivate_partner(self):
-        """Create a partner from lead and mark as supplier if applicable."""
-        res = super()._assign_and_deactivate_partner()
+    def _create_supplier(self):
+        """Create supplier values from lead data"""
+        self.ensure_one()
+        supplier = {
+            'name': self.partner_id.name or self.name,
+            'street': self.street,
+            'street2': self.street2,
+            'city': self.city,
+            'state_id': self.state_id.id,
+            'zip': self.zip,
+            'vat': self.vat,
+            'country_id': self.country_id.id,
+            'website': self.website,
+            'email': self.email_from,
+            'phone': self.phone,
+            'mobile': self.mobile,
+            'customer_rank': 0,
+            'supplier_rank': 1,
+            'business_type': self.business_type,
+            'property_payment_term_id': False,
+            'property_supplier_payment_term_id': self.payment_term_id.id,
+            'trading_name': self.trading_name,
+            'registration_status': False,
+            'company_type': 'company',
+            'is_registered_customer': False,
+            'is_registered_supplier': True,
+            'comment': self.description,
+            'title': self.title.id,
+            'function': self.function,
+            'type': 'contact',
+        }
+        if self.lang_id.active:
+            supplier['lang'] = self.lang_id.code
+        return self.env['res.partner'].sudo().create(supplier)
+
+    def _assign_and_deactivate_supplier(self):
+        """Create a partner from contact registration data, link it to the lead"""
         for lead in self:
-            if lead.is_supplier_reg and lead.partner_id:
-                lead.partner_id.write({
-                    'supplier_rank': 1,
-                    'company_type': 'company',
-                    'is_registered_supplier': True,
-                })
-            # partner.active = False
-        return res
+            partner = lead._create_supplier()
+            lead.partner_id = partner.id
+
+            lead._create_finance_child_contact(lead.partner_id, supplier_rank=1)
+            lead._create_operational_child_contact(lead.partner_id, supplier_rank=1)
 
     def _notify_ops_team(self):
         """Send email to all users in Supplier Operations group."""
@@ -477,7 +461,8 @@ class CrmLead(models.Model):
 
         for lead in leads.filtered(lambda x: x.is_supplier_reg):
             # Partner assign to lead
-            lead._assign_and_deactivate_partner()
+            lead._create_partner_bank_account()
+            lead._assign_and_deactivate_supplier()
             # Send email notification to operations team users
             lead._notify_ops_team()
 
