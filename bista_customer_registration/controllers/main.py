@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import base64
 import logging
 from odoo import http
@@ -60,9 +62,9 @@ class VendorRegistrationController(http.Controller):
             # Section 2
             "street": post.get("street"),
             "city": post.get("city"),
-            "state_id": post.get("state"),
+            "state_id": int(post.get("state", '0')),
             "zip": post.get("zip"),
-            "country_id": post.get("country"),
+            "country_id": int(post.get("country", '0')),
 
             "finance_name": post.get("finance_name"),
             "finance_phone": post.get("finance_phone"),

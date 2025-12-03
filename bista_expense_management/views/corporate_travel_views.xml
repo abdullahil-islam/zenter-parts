@@ -30,6 +30,13 @@
                 </header>
                 <sheet>
                     <div class="oe_button_box" name="button_box">
+                        <!-- Purchase Orders Button -->
+                        <button name="action_view_purchase_orders" type="object" class="oe_stat_button"
+                                icon="fa-shopping-cart" invisible="po_count == 0">
+                            <field name="po_count" widget="statinfo" string="Purchase Orders"/>
+                        </button>
+                        
+                        <!-- Expense Reports Button -->
                         <button name="action_open_expense_sheets" type="object" class="oe_stat_button"
                                 icon="fa-file-text-o" invisible="state != 'approved'">
                             <div class="o_stat_info">
@@ -107,6 +114,21 @@
                                 </list>
                             </field>
                         </page>
+                        
+                        <!-- Purchase Orders Tab -->
+                        <page string="Purchase Orders" invisible="po_count == 0">
+                            <field name="purchase_order_ids" readonly="1">
+                                <tree>
+                                    <field name="name"/>
+                                    <field name="partner_id"/>
+                                    <field name="date_order"/>
+                                    <field name="amount_total"/>
+                                    <field name="state"/>
+                                    <field name="po_fully_paid" string="Paid"/>
+                                </tree>
+                            </field>
+                        </page>
+                        
                         <page string="Rejection Note" name='reject_info' invisible="state in ['draft','approved']">
                             <group>
                                 <field name="md_rejection_reason" readonly="1"
@@ -137,6 +159,7 @@
                 <field name="destination"/>
                 <field name="state"/>
                 <field name="total_estimated_amount"/>
+                <field name="po_count"/>
                 <field name="advance_state"/>
             </list>
         </field>

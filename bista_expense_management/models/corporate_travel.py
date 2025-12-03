@@ -1,4 +1,3 @@
-
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError, UserError
 
@@ -52,6 +51,10 @@ class CorporateTravel(models.Model):
     md_rejection_reason = fields.Text(string='MD Rejection Reason', tracking=True)
     fd_rejection_reason = fields.Text(string='FD Rejection Reason', tracking=True)
     expense_sheet_ids = fields.One2many('hr.expense.sheet', 'travel_id', string='Created Expense Sheets')
+    
+    # Purchase Order Fields
+    purchase_order_ids = fields.One2many('purchase.order', 'travel_id', string='Purchase Orders', readonly=True)
+    po_count = fields.Integer(string='PO Count', compute='_compute_po_count')
 
     # Advance Payment Fields
     advance_payment_id = fields.Many2one('account.payment', string='Advance Payment', readonly=True, copy=False)
@@ -88,6 +91,11 @@ class CorporateTravel(models.Model):
         copy=False,
         help="Payment created to settle advance balance"
     )
+
+    @api.depends('purchase_order_ids')
+    def _compute_po_count(self):
+        for rec in self:
+            rec.po_count = len(rec.purchase_order_ids)
 
     @api.depends('expense_sheet_ids', 'expense_sheet_ids.state', 'expense_sheet_ids.expense_line_ids')
     def _compute_actual_expenses(self):
@@ -151,6 +159,18 @@ class CorporateTravel(models.Model):
                 'default_balance_amount': abs(self.advance_balance),
                 'default_balance_type': 'employee_owes' if self.advance_balance > 0 else 'company_owes',
             },
+        }
+
+    def action_view_purchase_orders(self):
+        """Open purchase orders related to this travel request"""
+        self.ensure_one()
+        return {
+            'name': _('Purchase Orders'),
+            'type': 'ir.actions.act_window',
+            'res_model': 'purchase.order',
+            'view_mode': 'tree,form',
+            'domain': [('id', 'in', self.purchase_order_ids.ids)],
+            'context': {'create': False},
         }
 
     @api.model
@@ -224,21 +244,39 @@ class CorporateTravel(models.Model):
         self.ensure_one()
         if not self.env.user.has_group('bista_expense_management.group_fd') and not self.env.user.has_group('base.group_system'):
             raise ValidationError('Only Finance Director can approve here.')
+        
+        # Enhanced vendor validation - check both company_account and PO type lines
         for rec in self:
+            # Check company_account lines
             missing_vendor_lines = rec.line_ids.filtered(
                 lambda line: not line.vendor_id and line.payment_mode == 'company_account'
             )
+            
+            # Also check PO type lines specifically
+            po_lines_no_vendor = rec.line_ids.filtered(
+                lambda line: not line.vendor_id and 
+                line.product_id and 
+                line.product_id.travel_exp_conf_id and 
+                line.product_id.travel_exp_conf_id.type == 'po'
+            )
 
-            if missing_vendor_lines:
-                product_names = missing_vendor_lines.mapped('product_id.name')
+            if missing_vendor_lines or po_lines_no_vendor:
+                all_missing = (missing_vendor_lines | po_lines_no_vendor)
+                product_names = all_missing.mapped('product_id.name')
                 error_message = _(
                     "The following lines are missing vendor information:\n\n%s\n\n"
                     "Please set the vendor for these lines before approving."
                 ) % '\n'.join(['• ' + name for name in product_names])
 
                 raise UserError(error_message)
+        
+        # Create Purchase Orders for PO type lines
+        self._create_purchase_orders()
+        
+        # Create Expense Sheets
         sheets = self._create_expense_sheets()
         self.expense_sheet_ids = [(6, 0, sheets.ids)]
+        
         self.state = 'approved'
         self.message_post(body='Approved by Finance Director: %s' % (self.env.user.name,))
 
@@ -257,12 +295,81 @@ class CorporateTravel(models.Model):
             },
         }
 
+    def _create_purchase_orders(self):
+        """Create draft purchase orders for PO type travel lines, grouped by vendor"""
+        self.ensure_one()
+        
+        # Get PO type lines
+        po_lines = self.line_ids.filtered(
+            lambda l: l.product_id and 
+            l.product_id.travel_exp_conf_id and 
+            l.product_id.travel_exp_conf_id.type == 'po' and
+            l.vendor_id
+        )
+        
+        if not po_lines:
+            return self.env['purchase.order']
+        
+        # Group lines by vendor
+        vendor_lines = {}
+        for line in po_lines:
+            vendor_id = line.vendor_id.id
+            if vendor_id not in vendor_lines:
+                vendor_lines[vendor_id] = []
+            vendor_lines[vendor_id].append(line)
+        
+        # Create POs
+        created_pos = self.env['purchase.order']
+        PurchaseOrder = self.env['purchase.order'].sudo()
+        
+        for vendor_id, lines in vendor_lines.items():
+            vendor = self.env['res.partner'].browse(vendor_id)
+            
+            # Prepare PO values
+            po_vals = {
+                'partner_id': vendor_id,
+                'travel_id': self.id,
+                'date_order': fields.Datetime.now(),
+                'origin': self.name,
+                'currency_id': self.currency_id.id or self.env.company.currency_id.id,
+                'notes': _('Purchase Order for Travel Request: %s\nEmployee: %s\nDestination: %s') % (
+                    self.name, self.employee_id.name, self.destination or ''
+                ),
+            }
+            
+            # Create PO
+            po = PurchaseOrder.create(po_vals)
+            
+            # Create PO lines
+            POLine = self.env['purchase.order.line'].sudo()
+            for travel_line in lines:
+                po_line_vals = {
+                    'order_id': po.id,
+                    'product_id': travel_line.product_id.id,
+                    'name': travel_line.description or travel_line.product_id.name,
+                    'product_qty': 1.0,
+                    'price_unit': travel_line.estimated_amount,
+                    'date_planned': self.departure_datetime or fields.Datetime.now(),
+                    'travel_line_id': travel_line.id,  # Link to travel line
+                }
+                POLine.create(po_line_vals)
+            
+            created_pos |= po
+            
+            # Post message
+            self.message_post(
+                body=_('Purchase Order created: %s for vendor %s') % (po.name, vendor.name)
+            )
+        
+        return created_pos
+
     def _create_expense_sheets(self):
         # Mapping: flights/car/hotel -> PO Expenses; food -> Per Diem; other -> Other Expenses
         po_lines = []
         per_diem_lines = []
         other_lines = []
         Expense = self.env['hr.expense']
+        
         # iterate travel lines and map them to corresponding lists based on product -> travel config type
         for l in self.line_ids:
             # determine type from product's travel expense config
@@ -278,6 +385,7 @@ class CorporateTravel(models.Model):
                 'payment_mode': l.payment_mode,
                 'description': l.description,
                 'vendor_id': l.vendor_id.id,
+                'travel_line_id': l.id,  # Link back to travel line
             }
             if t == 'po':
                 po_lines.append(ln_vals)
@@ -288,33 +396,57 @@ class CorporateTravel(models.Model):
 
         Sheet = self.env['hr.expense.sheet']
 
-        def make_sheet(name, lines):
-            sheet_vals = {'name': name, 'employee_id': self.employee_id.id}
+        def make_sheet(name, lines, auto_approve=False):
+            sheet_vals = {
+                'name': name, 
+                'employee_id': self.employee_id.id,
+                'travel_id': self.id,
+            }
             sheet = Sheet.create(sheet_vals)
             sheet.write({'journal_id': sheet.payment_method_line_id.journal_id.id})
+            
+            created_expenses = self.env['hr.expense']
             for ln in lines:
                 ln_vals = dict(ln)
                 ln_vals.update({'sheet_id': sheet.id})
                 try:
-                    Expense.create(ln_vals)
+                    expense = Expense.create(ln_vals)
+                    created_expenses |= expense
                 except Exception as e:
+                    # Fallback with minimal fields
                     try:
-                        Expense.create({
+                        expense = Expense.create({
                             'name': ln_vals.get('name'),
                             'sheet_id': sheet.id,
                             'total_amount_currency': ln_vals.get('total_amount_currency', 0.0),
                             'employee_id': ln_vals.get('employee_id'),
                             'payment_mode': ln_vals.get('payment_mode'),
                             'description': ln_vals.get('description'),
-                            'vendor_id': ln_vals.get('vendor_id')
+                            'vendor_id': ln_vals.get('vendor_id'),
+                            'travel_line_id': ln_vals.get('travel_line_id'),
                         })
+                        created_expenses |= expense
                     except Exception:
                         pass
+            
+            # Auto-approve PO expense sheets since they're tied to approved POs
+            if auto_approve and created_expenses:
+                try:
+                    # Set state directly to approved/posted - skip normal approval flow
+                    sheet.write({'state': 'approve'})
+                    self.message_post(
+                        body=_('PO Expense Sheet auto-approved: %s (linked to Purchase Orders)') % sheet.name
+                    )
+                except Exception:
+                    pass
+            
             return sheet
 
-        s1 = make_sheet('PO Expenses - %s' % self.name, po_lines)
+        # PO expenses - auto-approve since tied to POs
+        s1 = make_sheet('PO Expenses - %s' % self.name, po_lines, auto_approve=True)
         s2 = make_sheet('Per Diem - %s' % self.name, per_diem_lines)
         s3 = make_sheet('Other Expenses - %s' % self.name, other_lines)
+        
         return self.env['hr.expense.sheet'].browse([r.id for r in (s1|s2|s3) if r])
 
     def action_open_expense_sheets(self):

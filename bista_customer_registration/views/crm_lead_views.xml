@@ -61,7 +61,7 @@
 
                     <div class="oe_title mb-auto">
                         <h1>
-                            <field name="reference_no" placeholder="customer Reference No"/>
+                            <field name="reference_no" placeholder="customer Reference No" required="1"/>
                         </h1>
                     </div>
                     <group>
@@ -69,9 +69,9 @@
                         <group string="Registration Info">
                             <field name="name" invisible="1"/>
                             <field name="has_state" invisible="1"/>
-                            <field name="legal_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="legal_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="trading_name" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="vat" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="vat" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="business_type" readonly="customer_state in ['approved', 'locked']"/>
                             <field name="phone" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="email_from" readonly="customer_state in ['approved', 'locked']" required="1"/>
@@ -102,16 +102,17 @@
 
                         <!-- Financial & Banking Details -->
                         <group string="Financial and Banking Details">
-                            <field name="bank_name" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="bic" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="bank_country" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="bank_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="bic" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="bank_country" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="bank_id" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="acc_number" readonly="customer_state in ['approved', 'locked']"/>
-                            <field name="acc_holder_name" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="acc_number" readonly="customer_state in ['approved', 'locked']" required="1"/>
+                            <field name="acc_holder_name" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="currency_id" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="supplier_invoice_currency_id"
                                    readonly="customer_state in ['approved', 'locked']"/>
                             <field name="payment_condition" readonly="customer_state in ['approved', 'locked']"/>
+                            <field name="payment_term_id" readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="price_list_discount" readonly="customer_state in ['approved', 'locked']"/>
                         </group>
                         <!--                        <group string="Contact Info">-->
@@ -147,7 +148,7 @@
                     <group string="Required Documents" groups="bista_customer_registration.group_customer_finance">
                         <group>
                             <field name="incorporation_certificate" filename="incorporation_certificate_filename"
-                                   readonly="customer_state in ['approved']"/>
+                                   readonly="customer_state in ['approved']" required="1"/>
                             <field name="incorporation_certificate_filename" invisible="1"/>
 
                             <field name="master_agreement" filename="master_agreement_filename"
@@ -161,7 +162,7 @@
 
                         <group>
                             <field name="bank_proof" filename="bank_proof_filename"
-                                   readonly="customer_state in ['approved', 'locked']"/>
+                                   readonly="customer_state in ['approved', 'locked']" required="1"/>
                             <field name="bank_proof_filename" invisible="1"/>
 
                             <field name="kyc_form" filename="kyc_form_filename"
@@ -198,12 +199,28 @@
         <field name="model">crm.lead</field>
         <field name="arch" type="xml">
             <search string="Supplier Register">
+
+                <field name="name" string="Name" filter_domain="[
+                        '|', '|', '|',
+                        ('partner_id', 'ilike', self),
+                        ('partner_name', 'ilike', self),
+                        ('email_from', 'ilike', self),
+                        ('name', 'ilike', self)]"/>
                 <!-- Filters for state -->
                 <filter name="filter_financial" string="Financial" domain="[('customer_state','=','finance')]"/>
                 <filter name="filter_commercial" string="Commercial" domain="[('customer_state','=','commercial')]"/>
                 <filter name="filter_accounts" string="Accounts" domain="[('customer_state','=','accounts')]"/>
                 <filter name="filter_approved" string="Approved" domain="[('customer_state','=','approved')]"/>
                 <filter name="filter_rejected" string="Rejected" domain="[('customer_state','=','rejected')]"/>
+
+                <group expand="0" string="Group By" colspan="16">
+                    <filter string="Status" name="group_by_status" context="{'group_by':'customer_state'}"/>
+
+                    <separator/>
+
+                    <filter string="Country" name="group_by_country_id" context="{'group_by':'country_id'}"/>
+                    <filter string="State" name="group_by_state_id" context="{'group_by':'state_id'}"/>
+                </group>
             </search>
         </field>
     </record>
@@ -215,17 +232,26 @@
         <field name="view_mode">list,form</field>
         <field name="search_view_id" ref="view_customer_register_search"/>
         <field name="domain">[('is_customer_reg', '=', True), ('distributor_or_customer', '=', 'customer')]</field>
-        <field name="context">{'is_customer_reg': True, 'default_distributor_or_customer': 'customer'}</field>
+        <field name="context">{'default_is_customer_reg': True, 'default_distributor_or_customer': 'customer'}</field>
         <field name="view_ids" eval="[(5, 0, 0),
-        (0, 0, {'view_mode': 'list', 'view_id': ref('bista_customer_registration.view_customer_register_tree')}),
-        (0, 0, {'view_mode': 'form', 'view_id': ref('bista_customer_registration.view_customer_register_form')})
-    ]"/>
+            (0, 0, {'view_mode': 'list', 'view_id': ref('bista_customer_registration.view_customer_register_tree')}),
+            (0, 0, {'view_mode': 'form', 'view_id': ref('bista_customer_registration.view_customer_register_form')})
+        ]"/>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create a new Customer Registration
+            </p>
+            <p>
+                View and manage all customer registration applications.
+            </p>
+        </field>
     </record>
 
     <record id="action_distributor_registrations" model="ir.actions.act_window">
         <field name="name">Distributor Applications</field>
         <field name="res_model">crm.lead</field>
         <field name="view_mode">list,form</field>
+        <field name="search_view_id" ref="view_customer_register_search"/>
         <field name="domain">[('is_customer_reg', '=', True), ('distributor_or_customer', '=', 'distributor')]</field>
         <field name="context">{
             'default_is_customer_reg': True,

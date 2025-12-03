@@ -15,13 +15,27 @@ class TravelExpenseCategory(models.Model):
         string='Meal Type', default=''
     )
     price_unit = fields.Monetary(string='Price', currency_field='currency_id')
-    is_po_approve = fields.Boolean(string='Require PO Approval')
+    is_po_approve = fields.Boolean(string='Require PO Approval', compute='_compute_is_po_approve', store=True, readonly=False)
     state = fields.Selection([('draft','Draft'), ('confirmed','Confirmed')], default='draft')
     product_id = fields.Many2one('product.product', string='Created Product', readonly=True, copy=False)
     company_id = fields.Many2one('res.company', string='Company', required=True, readonly=True, index=True,
                                  default=lambda self: self.env.company,
                                  help="Company related to this journal")
     currency_id = fields.Many2one('res.currency', related='company_id.currency_id', help='The currency used to enter statement', string="Currency")
+
+    @api.depends('type')
+    def _compute_is_po_approve(self):
+        """Auto-set is_po_approve to True when type is 'po'"""
+        for rec in self:
+            if rec.type == 'po':
+                rec.is_po_approve = True
+            # Keep existing value for other types
+
+    @api.onchange('type')
+    def _onchange_type_po_approve(self):
+        """Also handle via onchange for immediate UI feedback"""
+        if self.type == 'po':
+            self.is_po_approve = True
 
     def action_confirm(self):
         """Confirm category and create a linked product automatically."""
@@ -38,7 +52,7 @@ class TravelExpenseCategory(models.Model):
             'travel_exp_product': True,
             'can_be_expensed': True,
             'sale_ok': False,
-            'purchase_ok': False,
+            'purchase_ok': True,  # Enable purchase for PO products
             'taxes_id': False,
         }
         prod = Product.create(vals)
@@ -61,11 +75,6 @@ class TravelExpenseCategory(models.Model):
     @api.onchange('type')
     def onchange_type(self):
         self.price_unit = 0
-
-    # @api.depends('name')
-    # def compute_product_name(self):
-    #     for rec in self:
-    #         rec.product_id.name = rec.name
 
 
 class ProductProduct(models.Model):

@@ -1,6 +1,18 @@
 from odoo import models, fields, api, _
 
 
+class HrExpense(models.Model):
+    _inherit = 'hr.expense'
+
+    travel_line_id = fields.Many2one(
+        'corporate.travel.line',
+        string='Travel Line',
+        readonly=True,
+        copy=False,
+        help="Link to the travel request line that created this expense"
+    )
+
+
 class HrExpenseSheet(models.Model):
     _inherit = 'hr.expense.sheet'
 
@@ -65,32 +77,5 @@ class HrExpenseSheet(models.Model):
 
             # Create the line
             self.env['account.move.line'].sudo().create(adjustment_line_vals)
-
-            # Recompute the totals
-            # bill._recompute_dynamic_lines(recompute_all_taxes=True)
-
-            # Update advance balance
-            # new_balance = advance_amount - calculated_amount
-            # sheet.travel_id.sudo().write({
-            #     'advance_balance': new_balance,
-            # })
-
-            # If advance is fully consumed, update state to reconciled
-            # if new_balance <= 0:
-            #     # sheet.travel_id.sudo().write({
-            #     #     'advance_state': 'reconciled',
-            #     # })
-            #
-            #     # Post message to travel record
-            #     sheet.travel_id.message_post(
-            #         body=_('Travel advance fully reconciled with expense sheet: %s') % sheet.name
-            #     )
-            # else:
-            #     # Post message about partial reconciliation
-            #     sheet.travel_id.message_post(
-            #         body=_('Travel advance partially reconciled. Amount: %s, Remaining balance: %s') % (
-            #             calculated_amount, new_balance
-            #         )
-            #     )
 
         return moves

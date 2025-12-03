@@ -61,7 +61,7 @@
 
                                 <div class="col-md-6" data-animate="right">
                                     <label class="form-label">Country</label>
-                                    <select class="form-select" name="country">
+                                    <select class="form-select" name="comp_country">
                                         <option value="">-- Select --</option>
                                         <t t-foreach="country_ids" t-as="ct">
                                             <option t-att-value="ct.id">
@@ -90,7 +90,7 @@
                                             <label class="form-label">Applicant Email
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input class="form-control" type="email" name="applicant_email" required="1"/>
+                                            <input class="form-control email-field" type="email" name="applicant_email" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="left">
                                             <label class="form-label">Applicant Phone
@@ -110,11 +110,11 @@
                                             <input class="form-control" name="city" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">State<span class="text-danger">*</span></label>
-                                            <select class="form-select" name="state" required="1">
+                                            <label class="form-label">State<span class="text-danger d-none">*</span></label>
+                                            <select class="form-select" name="state" id="state_select" required="false">
                                                 <option value="0">-- Select --</option>
                                                 <t t-foreach="state_ids" t-as="st">
-                                                    <option t-att-value="st.id">
+                                                    <option t-att-value="st.id" t-att-data-country-id="st.country_id.id">
                                                         <t t-esc="st.name"/>
                                                     </option>
                                                 </t>
@@ -129,7 +129,7 @@
                                             <label class="form-label">Country
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <select class="form-select" name="country" required="1">
+                                            <select class="form-select" name="country" id="country_select" required="1">
                                                 <option value="">-- Select --</option>
                                                 <t t-foreach="country_ids" t-as="ct">
                                                     <option t-att-value="ct.id">
@@ -163,11 +163,11 @@
                                             <label class="form-label">Email
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input class="form-control" name="finance_email" required="1"/>
+                                            <input class="form-control email-field" name="finance_email" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
-                                            <label class="form-label">Phone Number</label>
-                                            <input class="form-control" name="finance_phone"/>
+                                            <label class="form-label">Phone Number<span class="text-danger">*</span></label>
+                                            <input class="form-control" name="finance_phone" required="1"/>
                                         </div>
                                     </div>
                                 </div>
@@ -194,7 +194,7 @@
                                             <label class="form-label">Email
                                                 <span class="text-danger">*</span>
                                             </label>
-                                            <input class="form-control" name="operational_email" required="1"/>
+                                            <input class="form-control email-field" name="operational_email" required="1"/>
                                         </div>
                                         <div class="col-md-6" data-animate="right">
                                             <label class="form-label">Phone Number

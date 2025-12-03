@@ -21,6 +21,11 @@
         'views/res_partner_views.xml',
         'views/customer_form_templates.xml',
     ],
+    'assets': {
+        'web.assets_frontend': [
+            'bista_customer_registration/static/src/js/customer_registration_form.js',
+        ],
+    },
     'installable': True,
     'auto_install': False,
     "application": True,

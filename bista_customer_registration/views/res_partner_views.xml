@@ -1,12 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <record id="inherit_view_res_partner_filter" model="ir.ui.view">
+        <field name="name">inherit_view_res_partner_filter</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_res_partner_filter"/>
+        <field name="arch" type="xml">
+            <xpath expr="//filter[@name='type_company']" position="after">
+                <filter string="Registered Distributors" name="type_company" domain="[('is_registered_customer', '=', True), ('distributor_or_customer', '=', 'distributor')]"/>
+                <filter string="Registered Customers" name="type_company" domain="[('is_registered_customer', '=', True), ('distributor_or_customer', '=', 'customer')]"/>
+            </xpath>
+            
+            <xpath expr="//search/group[@name='group_by']" position="inside">
+                <filter name="group_reg_type" string="Registration Type" context="{'group_by': 'distributor_or_customer'}"/>
+            </xpath>
+        </field>
+    </record>
+
     <record id="customer_action_contacts" model="ir.actions.act_window">
         <field name="name">Registered customers</field>
         <field name="res_model">res.partner</field>
         <field name="view_mode">kanban,list,form,activity</field>
         <field name="domain">[('is_registered_customer', '=', True)]</field>
         <field name="search_view_id" ref="base.view_res_partner_filter"/>
-        <field name="context">{'default_is_company': True, 'create': 0}</field>
+        <field name="context">{'search_default_group_reg_type': 1, 'default_is_company': True, 'create': 0}</field>
     </record>
 
     <!-- This Menu Item must have a parent and an action -->

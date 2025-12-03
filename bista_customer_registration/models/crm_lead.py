@@ -1,3 +1,5 @@
+# -*- encoding: utf-8 -*-
+
 import logging
 from odoo import fields, models, api
 from odoo.exceptions import UserError
@@ -60,6 +62,7 @@ class CrmLead(models.Model):
                 'company_type': 'company',
                 'is_registered_customer': True,
                 'is_registered_supplier': False,
+                'distributor_or_customer': lead.distributor_or_customer,
             })
 
             lead._create_finance_child_contact(lead.partner_id, customer_rank=1)
@@ -92,7 +95,7 @@ class CrmLead(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if self.env.context.get('is_customer_reg') or vals.get('is_customer_reg'):
+            if self.env.context.get('default_is_customer_reg') or vals.get('is_customer_reg'):
                 if 'is_customer_reg' not in vals:
                     vals['is_customer_reg'] = True
                 if 'contact_name' not in vals and not vals.get('contact_name', '') and vals.get('legal_name', ''):
@@ -100,13 +103,21 @@ class CrmLead(models.Model):
                         'contact_name': vals.get('legal_name', ''),
                     })
                 reg_type = vals.get('distributor_or_customer')
-                if vals.get('reference_no', 'New') == 'New' and reg_type == 'customer':
-                    vals['reference_no'] = self.env['ir.sequence'].sudo().next_by_code('crm.lead.customer.reference') or 'New'
-                elif vals.get('reference_no', 'New') == 'New' and reg_type == 'distributor':
-                    vals['reference_no'] = self.env['ir.sequence'].sudo().next_by_code('crm.lead.distributor.reference') or 'New'
+                ALLOWED_REG_TYPES = ['customer', 'distributor']
+                if reg_type not in ALLOWED_REG_TYPES:
+                    reg_type = 'customer'
+
+                if vals.get('reference_no', 'New') == 'New' and reg_type == 'customer' and vals['is_customer_reg']:
+                    vals['reference_no'] = self.env['ir.sequence'].sudo().next_by_code(
+                        'crm.lead.customer.reference') or 'New'
+                elif vals.get('reference_no', 'New') == 'New' and reg_type == 'distributor' and vals['is_customer_reg']:
+                    vals['reference_no'] = self.env['ir.sequence'].sudo().next_by_code(
+                        'crm.lead.distributor.reference') or 'New'
                 if not vals.get('name'):
                     vals['name'] = vals.get('legal_name', '') or 'Unnamed'
         leads = super(CrmLead, self).create(vals_list)
+
+        reg_type = vals.get('distributor_or_customer')
         for lead in leads.filtered(lambda x: x.is_customer_reg):
             # Partner assign to lead
             lead._create_partner_bank_account()
@@ -184,6 +195,7 @@ class CrmLead(models.Model):
             'is_registered_customer': bool(customer_rank),
             'is_registered_supplier': bool(supplier_rank),
             'registration_status': False,
+            'distributor_or_customer': self.distributor_or_customer,
         })
 
     def _create_operational_child_contact(self, partner, customer_rank=0, supplier_rank=0):
@@ -204,21 +216,7 @@ class CrmLead(models.Model):
             'is_registered_customer': bool(customer_rank),
             'is_registered_supplier': bool(supplier_rank),
             'registration_status': False,
-        })
-
-    def _create_operational_child_contact(self, partner):
-        """
-        Create a operational child contact under the given partner using customer contact fields
-        """
-        if not (self.operational_name or self.operational_phone or self.operational_email):
-            return
-        self.env['res.partner'].create({
-            'parent_id': partner.id,
-            'type': 'contact',
-            'name': self.operational_name,
-            'phone': self.operational_phone,
-            'email': self.operational_email,
-            'function': self.operational_position,
+            'distributor_or_customer': self.distributor_or_customer,
         })
 
     def action_reject_customer(self):
