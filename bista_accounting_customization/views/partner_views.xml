@@ -8,7 +8,9 @@
         <field name="arch" type="xml">
 
             <xpath expr="//field[@name='category_id']" position="after">
-                <field name="analytic_distribution" widget="analytic_distribution" groups="analytic.group_analytic_accounting"/>
+                <field name="analytic_distribution" widget="analytic_distribution" readonly="1"
+                       groups="analytic.group_analytic_accounting"/>
+                <field name="analytic_account_id" readonly="1" force_save="1"/>
             </xpath>
 
         </field>

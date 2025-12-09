@@ -118,14 +118,14 @@
                         <!-- Purchase Orders Tab -->
                         <page string="Purchase Orders" invisible="po_count == 0">
                             <field name="purchase_order_ids" readonly="1">
-                                <tree>
+                                <list>
                                     <field name="name"/>
                                     <field name="partner_id"/>
                                     <field name="date_order"/>
                                     <field name="amount_total"/>
                                     <field name="state"/>
                                     <field name="po_fully_paid" string="Paid"/>
-                                </tree>
+                                </list>
                             </field>
                         </page>
                         
@@ -178,8 +178,7 @@
 
     <!--    Provide Group permission to the menuitems-->
     <record id="bista_expense_management.menu_corporate_travel_root" model="ir.ui.menu">
-        <field name="groups_id" eval="[(6,0,[ref('base.group_system'),
-            ref('bista_expense_management.group_travel_user'),
+        <field name="groups_id" eval="[(6,0,[ref('base.group_user'),
             ref('bista_expense_management.group_md'),
             ref('bista_expense_management.group_fd')])]"/>
     </record>

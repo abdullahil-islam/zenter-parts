@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_res_partner_form_skip_backorder_inherit" model="ir.ui.view">
+        <field name="name">view.skip.backorder.res.partner.form.inherit</field>
+        <field name="model">res.partner</field>
+        <field name="inherit_id" ref="base.view_partner_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='category_id']" position="after">
+                <field name="skip_backorder" widget="boolean_toggle" invisible="not is_company and parent_id"/>
+                <div name="parent_skip_backorder" colspan="2" invisible="is_company or not parent_id">
+                    <p>Skipping backorders are managed on
+                        <button name="open_commercial_entity" type="object" string="the parent company" class="oe_link"/>
+                    </p>
+                </div>
+            </xpath>
+        </field>
+    </record>
+</odoo>

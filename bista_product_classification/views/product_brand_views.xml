@@ -75,6 +75,6 @@
         id="menu_product_brand"
         action="action_product_brand"
         sequence="2"
-        parent="account.account_management_menu"
+        parent="stock.menu_product_in_config_stock"
     />
 </odoo>

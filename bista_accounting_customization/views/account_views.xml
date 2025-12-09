@@ -30,6 +30,7 @@
                     <field name="is_eligible_prod_categ" string='Is Eligible Product Family'/>
 <!--                    <field name="is_eligible_user" string='Is Eligible User'/>-->
                     <field name="is_eligible_hr_department" string='Is Eligible Hr Department'/>
+                    <field name="is_eligible_country" string='Is Eligible Country'/>
                     <field name="is_eligible_region" string='Is Eligible Region'/>
                     <field name="is_eligible_top_region" string='Is Eligible Top Region'/>
                 </xpath>

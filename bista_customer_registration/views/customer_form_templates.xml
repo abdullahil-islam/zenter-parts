@@ -38,7 +38,7 @@
                                     <label class="form-label">Company Registration/VAT Number
                                         <span class="text-danger">*</span>
                                     </label>
-                                    <input class="form-control" name="company_reg_no" required="1"/>
+                                    <input class="form-control vat-field" name="company_reg_no" required="1"/>
                                 </div>
                                 <div class="col-md-6" data-animate="right">
                                     <label class="form-label">
@@ -59,17 +59,17 @@
                                     <input class="form-control" name="website_url" placeholder="https://"/>
                                 </div>
 
-                                <div class="col-md-6" data-animate="right">
-                                    <label class="form-label">Country</label>
-                                    <select class="form-select" name="comp_country">
-                                        <option value="">-- Select --</option>
-                                        <t t-foreach="country_ids" t-as="ct">
-                                            <option t-att-value="ct.id">
-                                                <t t-esc="ct.name"/>
-                                            </option>
-                                        </t>
-                                    </select>
-                                </div>
+<!--                                <div class="col-md-6" data-animate="right">-->
+<!--                                    <label class="form-label">Country</label>-->
+<!--                                    <select class="form-select" name="comp_country">-->
+<!--                                        <option value="">&#45;&#45; Select &#45;&#45;</option>-->
+<!--                                        <t t-foreach="country_ids" t-as="ct">-->
+<!--                                            <option t-att-value="ct.id">-->
+<!--                                                <t t-esc="ct.name"/>-->
+<!--                                            </option>-->
+<!--                                        </t>-->
+<!--                                    </select>-->
+<!--                                </div>-->
                             </div>
                         </div>
                     </div>

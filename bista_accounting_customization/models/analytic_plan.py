@@ -42,11 +42,17 @@ class AccountAnalyticPlan(models.Model):
         default=False,
         help="If checked, this plan can be used in department analytic distributions"
     )
+    is_eligible_country = fields.Boolean(
+        string="Eligible for Country",
+        default=False,
+        help="If checked, this plan can be used in country analytic distributions"
+    )
     is_eligible_region = fields.Boolean(
         string="Eligible for Regions",
         default=False,
         help="If checked, this plan can be used in country group analytic distributions"
     )
+
     is_eligible_top_region = fields.Boolean(
         string="Eligible for Top-Level Regions",
         default=False,
@@ -69,7 +75,7 @@ class AccountAnalyticPlan(models.Model):
             'product.brand': 'is_eligible_prod_brand',
             'product.category': 'is_eligible_prod_categ',
             'hr.department': 'is_eligible_hr_department',
-            'res.country.group': 'is_eligible_region',
+            'country.group.analytic.distribution': 'is_eligible_region',
         }
 
         current_model = kwargs.get('current_model', '')

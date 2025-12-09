@@ -1,41 +1,37 @@
-# -*- coding: utf-8 -*-
-
-from odoo import models, fields, api
+from odoo import api, fields, models
 
 
 class ResCountryGroup(models.Model):
     _inherit = 'res.country.group'
 
-    analytic_distribution_ids = fields.One2many(
-        'country.group.analytic.distribution',
-        'country_group_id',
-        string='Analytic Distributions',
-        help='Company-specific analytic distributions for this country group'
-    )
+    @api.model_create_multi
+    def create(self, vals_list):
+        records = super().create(vals_list)
+        records._create_region_analytic_accounts()
+        return records
 
-    analytic_distribution_count = fields.Integer(
-        string='Distribution Count',
-        compute='_compute_analytic_distribution_count'
-    )
+    def _create_region_analytic_accounts(self):
+        """Create analytic accounts for country groups under the eligible region plan."""
+        AnalyticAccount = self.env['account.analytic.account']
+        AnalyticPlan = self.env['account.analytic.plan']
 
-    @api.depends('analytic_distribution_ids')
-    def _compute_analytic_distribution_count(self):
+        # Find the first plan eligible for regions
+        region_plan = AnalyticPlan.search([
+            ('is_eligible_region', '=', True)
+        ], limit=1)
+
+        if not region_plan:
+            return  # No eligible plan configured, skip silently
+
         for group in self:
-            group.analytic_distribution_count = len(group.analytic_distribution_ids)
+            # Check if analytic account with same name already exists under this plan
+            existing = AnalyticAccount.search([
+                ('name', '=', group.name),
+                ('plan_id', '=', region_plan.id)
+            ], limit=1)
 
-    def get_analytic_distribution(self, company_id=None):
-        """
-        Get analytic distribution for this country group in a specific company.
-
-        Args:
-            company_id: ID of the company (defaults to current company)
-
-        Returns:
-            dict: Analytic distribution or empty dict
-        """
-        self.ensure_one()
-        if not company_id:
-            company_id = self.env.company.id
-
-        DistributionModel = self.env['country.group.analytic.distribution'].sudo()
-        return DistributionModel.get_distribution_for_country_group(self.id, company_id)
+            if not existing:
+                AnalyticAccount.create({
+                    'name': group.name,
+                    'plan_id': region_plan.id,
+                })

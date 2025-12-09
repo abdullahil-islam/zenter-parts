@@ -11,13 +11,11 @@ class CrmLead(models.Model):
     _order = "create_date desc"
 
     is_supplier_reg = fields.Boolean('Is Supplier?', default=False)
-    reference_no = fields.Char(string="Reference", required=True, copy=False,
+    reference_no = fields.Char(string="Reference", copy=False,
                                readonly=True, default=lambda self: 'New', tracking=True)
     legal_name = fields.Char(
-        string="Legal Name", help="Registered Legal Name", required=True, tracking=True, copy=False)
-    vat = fields.Char(string='Tax ID', tracking=True,
-                      help="The Tax Identification Number.", required=True)
-    # supplier_website = fields.Char('Website', tracking=True)
+        string="Legal Name", help="Registered Legal Name", tracking=True, copy=False)
+    vat = fields.Char(string='Tax ID', tracking=True, help="The Tax Identification Number.")
     trading_name = fields.Char(string="Trading Name", tracking=True, help="Trading Name (If different)")
     business_type = fields.Selection([
         ("manufacturer", "Manufacturer"),
@@ -30,8 +28,7 @@ class CrmLead(models.Model):
     incorporation_certificate = fields.Binary(
         string="Certificate of Incorporation / Business Registration",
         help="Upload the official Certificate of Incorporation or Business Registration document.",
-        attachment=True,
-        required=True
+        attachment=True
     )
     incorporation_certificate_filename = fields.Char(string="File Name")
     related_incorporation_certificate_id = fields.Many2one(
@@ -46,7 +43,6 @@ class CrmLead(models.Model):
         string="Proof of Bank Account",
         help="Upload bank account verification documents (e.g., IBAN Consult).",
         attachment=True,
-        required=True
     )
     bank_proof_filename = fields.Char(string="File Name")
     related_bank_proof_id = fields.Many2one(
@@ -142,15 +138,15 @@ class CrmLead(models.Model):
     )
 
     # bank related field: res.bank
-    bank_name = fields.Char(string="Bank Name", tracking=True, required=True)
-    bic = fields.Char(string='BIC Code', help="Bank BIC Code or SWIFT.", tracking=True, required=True)
-    bank_country = fields.Many2one('res.country', string='Bank Country', tracking=True, required=True)
+    bank_name = fields.Char(string="Bank Name", tracking=True)
+    bic = fields.Char(string='BIC Code', help="Bank BIC Code or SWIFT.", tracking=True)
+    bank_country = fields.Many2one('res.country', string='Bank Country', tracking=True)
     bank_id = fields.Many2one('res.bank', string='Bank', tracking=True)
 
     # person wise bank field : res.partner.bank
-    acc_number = fields.Char('Account Number', tracking=True, required=True)
+    acc_number = fields.Char('Account Number', tracking=True)
     acc_holder_name = fields.Char(
-        string='Account Holder Name', tracking=True, required=True,
+        string='Account Holder Name', tracking=True,
         help="Account holder name, in case it is different than the name of the Account Holder"
     )
     currency_id = fields.Many2one('res.currency', string='Currency', tracking=True)
@@ -160,7 +156,6 @@ class CrmLead(models.Model):
         "account.payment.term",
         string="Payment Terms",
         tracking=True,
-        required=True,
         help="Default payment terms to be applied (e.g., Net 30) when working with this bank account."
     )
     state = fields.Selection([
@@ -446,15 +441,15 @@ class CrmLead(models.Model):
     @api.model_create_multi
     def create(self, vals_list):
         for vals in vals_list:
-            if self.env.context.get('is_supplier_reg') or vals.get('is_supplier_reg'):
+            if self.env.context.get('default_is_supplier_reg') or vals.get('is_supplier_reg'):
                 if 'is_supplier_reg' not in vals:
                     vals['is_supplier_reg'] = True
                 if 'contact_name' not in vals and not vals.get('contact_name', '') and vals.get('legal_name', ''):
                     vals.update({
                         'contact_name': vals.get('legal_name', ''),
                     })
-                if vals.get('reference_no', 'New') == 'New':
-                    vals['reference_no'] = self.env['ir.sequence'].next_by_code('crm.lead.reference') or 'New'
+                if vals.get('reference_no', 'New') == 'New' and vals['is_supplier_reg']:
+                    vals['reference_no'] = self.env['ir.sequence'].sudo().next_by_code('crm.lead.distributor.reference') or 'New'
                 if not vals.get('name'):
                     vals['name'] = vals.get('legal_name', '') or 'Unnamed'
         leads = super(CrmLead, self).create(vals_list)

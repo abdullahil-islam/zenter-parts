@@ -1,35 +1,8 @@
-# -*- coding: utf-8 -*-
-
-from odoo import api, fields, models
+from odoo import models, fields, api
 
 
 class ProductBrand(models.Model):
-    _name = "product.brand"
-    _description = "Product Brand"
-    _order = "name"
-    _inherit = ['analytic.mixin']
+    _inherit = 'product.brand'
 
-    name = fields.Char("Brand Name", required=True)
-    description = fields.Text(translate=True)
-    logo = fields.Binary("Logo File")
-    product_ids = fields.One2many(
-        "product.template", "product_brand_id", string="Brand Products"
-    )
-    products_count = fields.Integer(
-        string="Number of products", compute="_compute_products_count"
-    )
-    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)
     analytic_distribution = fields.Json(required=True)
-
-    @api.depends("product_ids")
-    def _compute_products_count(self):
-        product_model = self.env["product.template"]
-        groups = product_model.read_group(
-            [("product_brand_id", "in", self.ids)],
-            ["product_brand_id"],
-            ["product_brand_id"],
-            lazy=False,
-        )
-        data = {group["product_brand_id"][0]: group["__count"] for group in groups}
-        for brand in self:
-            brand.products_count = data.get(brand.id, 0)
+    company_id = fields.Many2one('res.company', string='Company', default=lambda self: self.env.company)

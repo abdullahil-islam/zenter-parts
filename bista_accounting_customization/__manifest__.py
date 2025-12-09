@@ -11,9 +11,10 @@
         Key Features:
         - Auto-populate analytic distribution on invoice lines
         - Hierarchical distribution from country groups
-        - Product brand and category distribution
+        - Product category distribution
         - User and department distribution
-        - Enhanced product search with OEM tags
+        
+        Note: Product brand and OEM functionality has been moved to bista_product_classification module.
     """,
     'author': 'Bista Solutions Inc.',
     'website': 'https://www.bistasolutions.com',
@@ -24,7 +25,7 @@
     'version': '18.0.1.0.0',
     'sequence': 1,
     # any module necessary for this one to work correctly
-    'depends': ['base', 'account', 'analytic', 'product', 'hr', 'website_sale'],
+    'depends': ['base', 'account', 'analytic', 'product', 'hr', 'website_sale', 'bista_product_classification'],
 
     # always loaded
     'data': [
@@ -32,12 +33,11 @@
         'views/account_views.xml',
         'views/partner_views.xml',
         'views/product_views.xml',
-        'views/product_brand_views.xml',
         'views/product_category_views.xml',
         'views/res_users_views.xml',
         'views/hr_department_views.xml',
         'views/country_group_analytic_distribution_views.xml',
-        'views/res_country_group_views.xml',
+        # 'views/res_country_group_views.xml',
     ],
 
     'assets': {

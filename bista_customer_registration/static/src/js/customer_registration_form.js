@@ -1,6 +1,7 @@
 /** @odoo-module **/
 
 import publicWidget from '@web/legacy/js/public/public_widget';
+import { rpc } from '@web/core/network/rpc';
 
 publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
     selector: '.o-vendor-form',
@@ -9,6 +10,9 @@ publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
         'change #state_select': '_onStateChange',
         'blur .email-field': '_onEmailBlur',
         'input .email-field': '_onEmailInput',
+        'blur input[name="company_reg_no"]': '_onVatBlur',
+        'input input[name="company_reg_no"]': '_onVatInput',
+        'change select[name="country"]': '_onCompCountryChange',
         'submit form': '_onFormSubmit',
     },
 
@@ -19,15 +23,197 @@ publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
         this._super.apply(this, arguments);
         this.countrySelect = this.el.querySelector('#country_select');
         this.stateSelect = this.el.querySelector('#state_select');
+        this.vatField = this.el.querySelector('input[name="company_reg_no"]');
+        this.compCountrySelect = this.el.querySelector('select[name="country"]');
 
         // Store all state options for filtering
-        this.allStateOptions = Array.from(this.stateSelect.options).slice(1); // Skip "-- Select --"
+        this.allStateOptions = Array.from(this.stateSelect.options).slice(1);
 
         // Email regex pattern (RFC 5322 simplified)
         this.emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+        // VAT validation state
+        this.vatValidationPending = false;
+        this.vatValidationTimeout = null;
+
         return this._super.apply(this, arguments);
     },
+
+    // ==================== VAT VALIDATION METHODS ====================
+
+    /**
+     * Validate VAT via server-side RPC call
+     * @private
+     * @param {String} vat - VAT number to validate
+     * @param {String|Number} countryId - Country ID for validation
+     * @returns {Promise}
+     */
+    async _validateVatServer(vat, countryId) {
+        try {
+            const result = await rpc('/customer/validate_vat', {
+                vat: vat,
+                country_id: countryId || false,
+            });
+            return result;
+        } catch (error) {
+            console.error('VAT validation error:', error);
+            // On error, allow form submission (fail open) but warn user
+            return { valid: true, message: '', error: true };
+        }
+    },
+
+    /**
+     * Show VAT validation error message
+     * @private
+     * @param {HTMLElement} input - Input element
+     * @param {String} message - Error message
+     */
+    _showVatError: function(input, message) {
+        this._clearVatValidation(input);
+        input.classList.add('is-invalid');
+
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'invalid-feedback d-block';
+        errorDiv.textContent = message;
+        errorDiv.setAttribute('data-vat-error', 'true');
+
+        input.parentNode.appendChild(errorDiv);
+    },
+
+    /**
+     * Clear VAT validation state
+     * @private
+     * @param {HTMLElement} input - Input element
+     */
+    _clearVatValidation: function(input) {
+        input.classList.remove('is-invalid');
+        input.classList.remove('is-valid');
+
+        const existingError = input.parentNode.querySelector('[data-vat-error="true"]');
+        if (existingError) {
+            existingError.remove();
+        }
+
+        // Remove loading indicator if exists
+        const loadingIndicator = input.parentNode.querySelector('.vat-loading');
+        if (loadingIndicator) {
+            loadingIndicator.remove();
+        }
+    },
+
+    /**
+     * Show VAT validation success
+     * @private
+     * @param {HTMLElement} input - Input element
+     */
+    _showVatSuccess: function(input) {
+        this._clearVatValidation(input);
+        input.classList.add('is-valid');
+    },
+
+    /**
+     * Show loading indicator during VAT validation
+     * @private
+     * @param {HTMLElement} input - Input element
+     */
+    _showVatLoading: function(input) {
+        this._clearVatValidation(input);
+        
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'vat-loading text-muted small mt-1';
+        loadingDiv.innerHTML = '<i class="fa fa-spinner fa-spin me-1"></i>Validating VAT...';
+        
+        input.parentNode.appendChild(loadingDiv);
+    },
+
+    /**
+     * Handle VAT field blur event
+     * @private
+     * @param {Event} ev
+     */
+    async _onVatBlur(ev) {
+        const input = ev.currentTarget;
+        const vat = input.value.trim();
+        const countryId = this.compCountrySelect ? this.compCountrySelect.value : '';
+
+        if (!vat) {
+            if (input.hasAttribute('required')) {
+                this._showVatError(input, 'This field is required');
+            } else {
+                this._clearVatValidation(input);
+            }
+            return;
+        }
+
+        // Skip validation for single character (as per Odoo's logic)
+        if (vat.length <= 1) {
+            this._clearVatValidation(input);
+            return;
+        }
+
+        // Show loading state
+        this._showVatLoading(input);
+        this.vatValidationPending = true;
+
+        // Validate via server
+        const result = await this._validateVatServer(vat, countryId);
+        this.vatValidationPending = false;
+
+        if (result.valid) {
+            this._showVatSuccess(input);
+        } else {
+            this._showVatError(input, result.message || 'Invalid VAT number');
+        }
+    },
+
+    /**
+     * Handle VAT field input event (debounced validation)
+     * @private
+     * @param {Event} ev
+     */
+    _onVatInput: function(ev) {
+        const input = ev.currentTarget;
+        
+        // Clear any pending validation
+        if (this.vatValidationTimeout) {
+            clearTimeout(this.vatValidationTimeout);
+        }
+
+        // If field was already validated and user is typing, clear validation state
+        if (input.classList.contains('is-invalid') || input.classList.contains('is-valid')) {
+            this._clearVatValidation(input);
+        }
+
+        // Debounce: validate after user stops typing for 800ms
+        const vat = input.value.trim();
+        if (vat && vat.length > 1) {
+            this.vatValidationTimeout = setTimeout(() => {
+                this._onVatBlur({ currentTarget: input });
+            }, 800);
+        }
+    },
+
+    /**
+     * Re-validate VAT when company country changes
+     * @private
+     * @param {Event} ev
+     */
+    _onCompCountryChange: function(ev) {
+        const vatValue = this.vatField ? this.vatField.value.trim() : '';
+        
+        // If VAT has a value, re-validate with new country
+        if (vatValue && vatValue.length > 1) {
+            // Clear current validation
+            this._clearVatValidation(this.vatField);
+            
+            // Trigger re-validation after a short delay
+            setTimeout(() => {
+                this._onVatBlur({ currentTarget: this.vatField });
+            }, 300);
+        }
+    },
+
+    // ==================== STATE/COUNTRY VALIDATIONS ====================
 
     /**
      * Filter states based on selected country
@@ -103,6 +289,7 @@ publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
         }
     },
 
+	// ==================== EMAIL VALIDATION METHODS ====================
     /**
      * Validate email format
      * @private
@@ -207,15 +394,18 @@ publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
         }
     },
 
+    // ==================== FORM SUBMISSION ====================
+
     /**
      * Validate all email fields before form submission
      * @private
      * @param {Event} ev
      */
-    _onFormSubmit: function(ev) {
-        const emailFields = this.el.querySelectorAll('.email-field');
+    async _onFormSubmit(ev) {
         let isValid = true;
 
+        // Validate email fields
+        const emailFields = this.el.querySelectorAll('.email-field');
         emailFields.forEach(input => {
             const email = input.value.trim();
 
@@ -227,6 +417,38 @@ publicWidget.registry.CustomerRegistrationForm = publicWidget.Widget.extend({
                 isValid = false;
             }
         });
+
+        // Validate VAT field
+        if (this.vatField) {
+            const vat = this.vatField.value.trim();
+            const countryId = this.compCountrySelect ? this.compCountrySelect.value : '';
+
+            if (this.vatField.hasAttribute('required') && !vat) {
+                this._showVatError(this.vatField, 'This field is required');
+                isValid = false;
+            } else if (vat && vat.length > 1) {
+                // Prevent form submission while validating
+                ev.preventDefault();
+                
+                this._showVatLoading(this.vatField);
+                const result = await this._validateVatServer(vat, countryId);
+
+                if (!result.valid) {
+                    this._showVatError(this.vatField, result.message || 'Invalid VAT number');
+                    isValid = false;
+                } else {
+                    this._showVatSuccess(this.vatField);
+                }
+
+                // If all validations pass, submit the form programmatically
+                if (isValid) {
+                    // Remove the event listener temporarily to avoid infinite loop
+                    const form = this.el.querySelector('form');
+                    form.submit();
+                    return;
+                }
+            }
+        }
 
         if (!isValid) {
             ev.preventDefault();

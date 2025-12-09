@@ -45,8 +45,6 @@ class WebsiteSaleInherit(WebsiteSale):
         res = super().shop(page, category, search, min_price,
                            max_price, ppg, **post)
         res.qcontext.update({
-            'login_user': request.env.user._is_public() and request.env[
-                'ir.config_parameter'].sudo().get_param('website_hide_button.hide_cart'),
             'show_price': self.should_show_price_for_current_website()  # True = show, False = hide
         })
         return res
@@ -57,11 +55,7 @@ class WebsiteSaleInherit(WebsiteSale):
                                                                       category,
                                                                       search,
                                                                       **kwargs)
-        res['show_price'] =self.should_show_price_for_current_website()
-        res['login_user'] = True if request.env.user._is_public() and \
-                                    request.env[
-                                        'ir.config_parameter'].sudo().get_param(
-                                        'website_hide_button.hide_cart') else False
+        res['show_price'] = self.should_show_price_for_current_website()
         return res
 
     @http.route()
@@ -69,12 +63,12 @@ class WebsiteSaleInherit(WebsiteSale):
         """  Restrict public visitors from accessing payment page so that SO
         creation will be disabled   """
         user = http.request.env.user
-        if (
-                not user._is_public() or user._is_public() and not request.env.user._is_public() and self.should_show_price_for_current_website()) and user.has_group(
-            'base.group_portal') or \
-                user.has_group('base.group_user'):
-            res = super(WebsiteSaleInherit, self).shop_payment(**post)
-            return res
+        # Allow access if user is logged in (portal or internal user)
+        if not user._is_public() and (user.has_group('base.group_portal') or user.has_group('base.group_user')):
+            return super(WebsiteSaleInherit, self).shop_payment(**post)
+        # If price is hidden for public users, redirect them
+        if user._is_public() and not self.should_show_price_for_current_website():
+            return request.redirect("/")
         return request.redirect("/")
 
 

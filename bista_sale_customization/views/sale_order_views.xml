@@ -10,8 +10,13 @@
             <field name="arch" type="xml">
                 
                 <!-- Add backorder_qty column after qty_delivered in order lines -->
-                <xpath expr="//field[@name='order_line']/list/field[@name='qty_delivered']" position="after">
+                <xpath expr="//field[@name='order_line']/list/field[@name='product_uom_readonly']" position="before">
                     <field name="backorder_qty" optional="show"/>
+                    <field name="can_edit_discount" column_invisible="1"/>
+                </xpath>
+
+                <xpath expr="//field[@name='order_line']/list/field[@name='discount']" position="attributes">
+                    <attribute name="readonly">not can_edit_discount</attribute>
                 </xpath>
                 
             </field>

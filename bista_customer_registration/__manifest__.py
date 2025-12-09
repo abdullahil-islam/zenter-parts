@@ -12,7 +12,7 @@
     'version': '18.0.1.0.0',
     'sequence': 1,
     'license': 'LGPL-3',
-    'depends': ['base', 'account', 'crm', 'website', 'purchase', 'bista_supplier_registration'],
+    'depends': ['base', 'account', 'crm', 'website', 'purchase', 'bista_supplier_registration', 'base_vat'],
     'data': [
         # "security/ir.model.access.csv",
         "security/customer_security.xml",

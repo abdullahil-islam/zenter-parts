@@ -1,18 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
 
-<!--    <record id="contacts.action_contacts" model="ir.actions.act_window">-->
-<!--        <field name="domain">[('registration_status', '=', True)]</field>-->
-<!--    </record>-->
-
-<!--    <record id="account.res_partner_action_customer" model="ir.actions.act_window">-->
-<!--        <field name="domain">[('registration_status', '=', True)]</field>-->
-<!--    </record>-->
-
-<!--    <record id="account.res_partner_action_supplier" model="ir.actions.act_window">-->
-<!--        <field name="domain">[('registration_status', '=', True)]</field>-->
-<!--    </record>-->
-
     <record id="view_res_partner_form_supplier_inherit" model="ir.ui.view">
         <field name="name">view.supplier.res.partner.form.inherit</field>
         <field name="model">res.partner</field>
@@ -25,7 +13,6 @@
                         <group string="Registration Info" name="business_info" priority="1">
                             <field name="name"/>
                             <field name="trading_name"/>
-                            <field name="vat"/>
                             <field name="business_type"/>
                             <field name="website"/>
                             <field name="child_ids" widget="many2many_tags" string="Primary Contacts"/>

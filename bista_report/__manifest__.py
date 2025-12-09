@@ -14,13 +14,15 @@ invoices and related accounting documents in Odoo.
     'company': 'Bista Solutions Inc.',
     'maintainer': 'Bista Solutions Inc.',
     'category': 'Reporting',
-    'depends': ['base', 'l10n_us', 'account'],
+    'depends': ['base', 'l10n_us', 'account', 'l10n_ae'],
     'license': 'LGPL-3',
     'data': [
         # Reports
         'report/report_templates.xml',
         'report/report_invoice.xml',
         'data/report_layout.xml',
+        'report/document_tax_totals.xml',
+        'report/sale_order_reports.xml',
     ],
     'installable': True,
     'auto_install': False,

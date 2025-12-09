@@ -64,15 +64,6 @@ class ResConfigSettings(models.TransientModel):
         })
         return res
 
-    @api.model
-    def get_hide_settings(self):
-        """Method to get hide settings for current website"""
-        params = self.env['ir.config_parameter'].sudo()
-        hide_price = params.get_param('website_hide_button.hide_price')
-        return {
-            'hide_price': hide_price,
-        }
-
     @api.onchange('hide_type')
     def _onchange_hide_type(self):
         """Clear website_ids when changing to 'all' using Command format"""

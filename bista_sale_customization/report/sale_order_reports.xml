@@ -1,0 +1,52 @@
+<odoo>
+    <data>
+        <template id="zenter_document_tax_totals" inherit_id="sale.document_tax_totals">
+            <xpath expr="//tr[@class='o_subtotal']" position="before">
+                <t t-set="discount_amount" t-value="0"/>
+                <t t-foreach="doc.order_line" t-as="line">
+                    <t t-set="discount_amount" t-value="discount_amount + (line.price_unit * line.discount / 100) * line.product_uom_qty"/>
+                </t>
+                <tr class="o_discount">
+                    <td>
+                        <span>Line Discount</span>
+                    </td>
+                    <td class="text-end">
+                        <span t-att-class="oe_subtotal_footer_separator"
+                              t-out="round(discount_amount, 2)"
+                              t-options='{"widget": "monetary", "display_currency": currency}'
+                        >27.00</span>
+                    </td>
+                </tr>
+            </xpath>
+
+            <xpath expr="//tr[@class='o_subtotal']/td" position="replace">
+
+            </xpath>
+        </template>
+
+        <template id="zenter_document_tax_totals_template" inherit_id="account.document_tax_totals">
+            <xpath expr="//tr[@class='o_subtotal']" position="before">
+                <t t-set="discount_amount" t-value="0"/>
+                <t t-set="lines" t-value="o.invoice_line_ids.sorted(key=lambda l: (-l.sequence, l.date, l.move_name, -l.id), reverse=True)"/>
+
+                <t t-foreach="lines" t-as="line">
+
+                </t>
+                <t t-foreach="lines" t-as="line">
+                    <t t-set="discount_amount" t-value="discount_amount + (line.price_unit * line.discount / 100) * line.quantity"/>
+                </t>
+                <tr class="o_discount">
+                    <td>
+                        <span>Line Discount</span>
+                    </td>
+                    <td class="text-end">
+                        <span t-att-class="oe_subtotal_footer_separator"
+                              t-out="discount_amount"
+                              t-options='{"widget": "monetary", "display_currency": currency}'
+                        >27.00</span>
+                    </td>
+                </tr>
+            </xpath>
+        </template>
+    </data>
+</odoo>

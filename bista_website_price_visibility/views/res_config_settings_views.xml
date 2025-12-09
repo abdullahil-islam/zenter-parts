@@ -36,19 +36,19 @@
                         </div>
 
                         <!-- Info message for All Websites -->
-                        <div class="alert alert-info mt16" invisible="hide_type != 'all'">
+                        <div class="alert alert-info mt16" role="status" invisible="hide_type != 'all'">
                             <i class="fa fa-info-circle"/>
                             <span> Product prices will be hidden for the users on <strong>all websites</strong>.</span>
                         </div>
 
                         <!-- Info message for Selected Websites -->
-                        <div class="alert alert-info mt16" invisible="hide_type != 'selected' or not website_ids">
+                        <div class="alert alert-info mt16" role="status" invisible="hide_type != 'selected' or not website_ids">
                             <i class="fa fa-info-circle"/>
                             <span> Product prices will be hidden for the users on <strong>selected websites only</strong>.</span>
                         </div>
 
                         <!-- Warning message when no websites selected -->
-                        <div class="alert alert-warning mt16" invisible="hide_type != 'selected' or website_ids">
+                        <div class="alert alert-warning mt16" role="alert" invisible="hide_type != 'selected' or website_ids">
                             <i class="fa fa-warning"/>
                             <span> Please select at least one website to apply this feature.</span>
                         </div>

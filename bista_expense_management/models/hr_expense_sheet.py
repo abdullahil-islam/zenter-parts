@@ -18,6 +18,46 @@ class HrExpenseSheet(models.Model):
 
     # Add reverse relationship to corporate.travel
     travel_id = fields.Many2one('corporate.travel', string='Travel Request', readonly=True, copy=False)
+    po_account_move_ids = fields.One2many(
+        string="Journal Entries",
+        comodel_name='account.move', inverse_name='po_expense_sheet_id', readonly=True,
+    )
+
+    @api.depends('account_move_ids.payment_state', 'account_move_ids.amount_residual', 'po_account_move_ids.payment_state', 'po_account_move_ids.amount_residual')
+    def _compute_from_account_move_ids(self):
+        res = super()._compute_from_account_move_ids()
+        for sheet in self:
+            purchase_ids = self.po_account_move_ids.invoice_line_ids.mapped('purchase_order_id')
+            if purchase_ids and 'PO Expenses' in sheet.name:
+                sheet.amount_residual = sum(sheet.po_account_move_ids.mapped('amount_residual'))
+                payment_states = set(sheet.po_account_move_ids.mapped('payment_state'))
+                if len(payment_states) <= 1:  # If only 1 move or only one state
+                    sheet.payment_state = payment_states.pop() if payment_states else 'not_paid'
+                elif 'partial' in payment_states or 'paid' in payment_states:  # else if any are (partially) paid
+                    sheet.payment_state = 'partial'
+                else:
+                    sheet.payment_state = 'not_paid'
+                # if sheet.payment_state in ['paid', 'in_payment']:
+                #     sheet.approval_state = 'submit'
+        return res
+
+    @api.depends('account_move_ids', 'po_account_move_ids', 'payment_state', 'approval_state')
+    def _compute_state(self):
+        for sheet in self:
+            move_ids = sheet.account_move_ids | sheet.po_account_move_ids
+            if not sheet.approval_state:
+                sheet.state = 'draft'
+            elif sheet.approval_state == 'cancel':
+                sheet.state = 'cancel'
+            elif move_ids:
+                if sheet.payment_state != 'not_paid':
+                    sheet.state = 'done'
+                elif all(move_ids.mapped(lambda move: move.state == 'draft')):
+                    sheet.state = 'approve'
+                else:
+                    sheet.state = 'post'
+            else:
+                sheet.state = sheet.approval_state  # Submit & approved without a move case
 
     def _do_create_moves(self):
         """

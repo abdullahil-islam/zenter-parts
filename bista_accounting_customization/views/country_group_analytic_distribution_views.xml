@@ -9,7 +9,7 @@
                 <sheet>
                     <group>
                         <group>
-                            <field name="country_group_id" options="{'no_create': True}"/>
+                            <field name="country_id" options="{'no_create': True}"/>
                             <field name="company_id" groups="base.group_multi_company" options="{'no_create': True}"/>
                         </group>
                         <group>
@@ -29,7 +29,7 @@
         <field name="model">country.group.analytic.distribution</field>
         <field name="arch" type="xml">
             <list>
-                <field name="country_group_id"/>
+                <field name="country_id"/>
                 <field name="company_id" groups="base.group_multi_company"/>
                 <field name="analytic_distribution" widget="analytic_distribution"/>
             </list>
@@ -51,4 +51,12 @@
             action="action_country_group_analytic_distribution"
             sequence="10"
     />
+
+    <record id="action_automatic_entry_change_period" model="ir.actions.server">
+        <field name="name">Sync Countries</field>
+        <field name="model_id" ref="bista_accounting_customization.model_country_group_analytic_distribution"/>
+        <field name="binding_model_id" ref="bista_accounting_customization.model_country_group_analytic_distribution"/>
+        <field name="state">code</field>
+        <field name="code">action = records.action_automatic_entry()</field>
+    </record>
 </odoo>

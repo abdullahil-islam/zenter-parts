@@ -168,7 +168,7 @@ class CorporateTravel(models.Model):
             'name': _('Purchase Orders'),
             'type': 'ir.actions.act_window',
             'res_model': 'purchase.order',
-            'view_mode': 'tree,form',
+            'view_mode': 'list,form',
             'domain': [('id', 'in', self.purchase_order_ids.ids)],
             'context': {'create': False},
         }
@@ -443,7 +443,7 @@ class CorporateTravel(models.Model):
             return sheet
 
         # PO expenses - auto-approve since tied to POs
-        s1 = make_sheet('PO Expenses - %s' % self.name, po_lines, auto_approve=True)
+        s1 = make_sheet('PO Expenses - %s' % self.name, po_lines)
         s2 = make_sheet('Per Diem - %s' % self.name, per_diem_lines)
         s3 = make_sheet('Other Expenses - %s' % self.name, other_lines)
         

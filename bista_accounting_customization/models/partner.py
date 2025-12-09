@@ -10,100 +10,52 @@ class ResPartner(models.Model):
     _name = 'res.partner'
     _inherit = ['res.partner', 'analytic.mixin']
 
-    analytic_distribution = fields.Json()
+    analytic_account_id = fields.Many2one(
+        'account.analytic.account',
+        string="Analytic Account",
+        help="Analytic account automatically created for this partner"
+    )
+    analytic_distribution = fields.Json(compute='_compute_analytic_distribution', store=True)
+    # country_group_distribution_ids = fields.One2many('country.group.analytic.distribution', 'country_id')
 
-    @api.onchange('country_id')
-    def _onchange_country_analytic_distribution(self):
-        """
-        Update partner's analytic distribution when country changes.
-        Merges distributions from all country groups for the selected country.
-        """
-        if not self.country_id:
-            return
+    @api.depends('country_id', 'analytic_account_id')
+    def _compute_analytic_distribution(self):
+        for rec in self:
+            distributions = {}
 
-        # Get all country groups for this country
-        country_groups = self.country_id.country_group_ids
-        if not country_groups:
-            return
+            # Add partner's own analytic account
+            if rec.analytic_account_id:
+                distributions.update({str(rec.analytic_account_id.id):100})
 
-        # Start with existing distribution or empty dict
-        distributions = self.analytic_distribution.copy() if self.analytic_distribution else {}
-
-        # Get current company
-        company_id = self.env.company.id
-
-        # Merge distributions from all country groups
-        for group in country_groups:
-            try:
-                group_dist = group.get_analytic_distribution(company_id)
-                if group_dist:
-                    distributions.update(group_dist)
-            except Exception as e:
-                _logger.warning(
-                    "Failed to get analytic distribution from country group %s: %s",
-                    group.name, str(e)
-                )
-
-        if distributions:
-            self.analytic_distribution = distributions
+            country_group_distributions = self.env['country.group.analytic.distribution'].sudo().search([
+                ('country_id', '=', rec.country_id.id)
+            ])
+            for group_distribution in country_group_distributions:
+                if group_distribution.analytic_distribution:
+                    distributions.update(group_distribution.analytic_distribution)
+            rec.analytic_distribution = distributions
 
     @api.model_create_multi
     def create(self, vals_list):
-        """
-        Auto-populate analytic distribution from country groups on partner creation.
-        """
         partners = super().create(vals_list)
-
-        for partner in partners:
-            # If partner has country but no analytic distribution set, apply country group distribution
-            if partner.country_id and not partner.analytic_distribution:
-                try:
-                    distributions = {}
-                    company_id = self.env.company.id
-
-                    for group in partner.country_id.country_group_ids:
-                        group_dist = group.get_analytic_distribution(company_id)
-                        if group_dist:
-                            distributions.update(group_dist)
-
-                    if distributions:
-                        partner.analytic_distribution = distributions
-                except Exception as e:
-                    _logger.warning(
-                        "Failed to set country group distribution for partner %s: %s",
-                        partner.name, str(e)
-                    )
-
+        partners._create_analytic_accounts()
         return partners
 
-    def write(self, vals):
-        """
-        Override write to handle country changes and update analytic distribution.
-        """
-        res = super().write(vals)
+    def _create_analytic_accounts(self):
+        """Create analytic accounts for partners that don't have one."""
+        plan = self.env['account.analytic.plan'].sudo().search([
+            ('is_eligible_customer', '=', True)
+        ], limit=1)
 
-        # If country_id was changed in this write, update analytic distribution
-        if 'country_id' in vals:
-            for partner in self:
-                if partner.country_id and partner.country_id.country_group_ids:
-                    try:
-                        distributions = partner.analytic_distribution.copy() if partner.analytic_distribution else {}
-                        company_id = self.env.company.id
+        if not plan:
+            # You may want to raise an error or log a warning here
+            return
 
-                        for group in partner.country_id.country_group_ids:
-                            group_dist = group.get_analytic_distribution(company_id)
-                            if group_dist:
-                                distributions.update(group_dist)
-
-                        if distributions != partner.analytic_distribution:
-                            # Use context to avoid potential recursion
-                            partner.with_context(skip_country_update=True).write({
-                                'analytic_distribution': distributions
-                            })
-                    except Exception as e:
-                        _logger.warning(
-                            "Failed to update country group distribution for partner %s: %s",
-                            partner.name, str(e)
-                        )
-
-        return res
+        for partner in self:
+            if not partner.analytic_account_id:
+                analytic_account = self.env['account.analytic.account'].sudo().create({
+                    'name': f"Partner - {partner.name}",
+                    'plan_id': plan.id,
+                    'partner_id': partner.id,
+                })
+                partner.analytic_account_id = analytic_account

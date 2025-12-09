@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Inherit Form View to Add Brand and OEM Fields -->
+    <record id="product_template_views_inherit" model="ir.ui.view">
+        <field name="name">product.template.form.brand.oem</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='categ_id']" position="after">
+                <field name="oem_ids" widget="many2many_tags"/>
+            </xpath>
+            <xpath expr="//field[@name='categ_id']" position="before">
+                <field name="product_brand_id"/>
+            </xpath>
+        </field>
+    </record>
+    
+    <!-- Action to open brand products -->
+    <record id="action_open_brand_products" model="ir.actions.act_window">
+        <field name="name">Brand Products</field>
+        <field name="res_model">product.template</field>
+        <field name="view_mode">kanban,form,list</field>
+        <field name="domain">[('product_brand_id', '=', active_id)]</field>
+    </record>
+</odoo>

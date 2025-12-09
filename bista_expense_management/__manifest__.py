@@ -10,7 +10,7 @@
     'company': 'Bista Solutions Inc.',
     'maintainer': 'Bista Solutions Inc.',
     'category': 'Human Resources/Expenses',
-    'depends': ['base', 'mail', 'hr', 'hr_expense'],
+    'depends': ['base', 'mail', 'hr', 'hr_expense', 'account'],
     'data': [
         'security/corporate_travel_security.xml',
         'security/ir.model.access.csv',
@@ -23,6 +23,8 @@
         'wizard/travel_advance_settlement_wizard_views.xml',
         'views/menu.xml',
         'views/travel_expense_category_views.xml',
+        'views/purchase_order_views.xml',
+        'views/expense_sheet_views.xml',
     ],
     'installable': True,
     'application': False,
