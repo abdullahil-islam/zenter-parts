@@ -27,6 +27,7 @@
         'bista_expense_management' # Needed for MD and FD group validation from this module
     ],
     'data': [
+        'security/groups.xml',
         'views/sale_order_views.xml',
         'views/res_partner_views.xml',
     ],

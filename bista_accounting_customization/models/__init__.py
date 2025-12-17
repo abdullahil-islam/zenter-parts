@@ -11,3 +11,4 @@ from . import res_country_group
 from . import res_country
 from . import country_group_analytic_distribution
 from . import product_brand
+from . import account_group

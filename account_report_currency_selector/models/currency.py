@@ -8,18 +8,120 @@ from dateutil.relativedelta import relativedelta
 class ResCurrency(models.Model):
     _inherit = "res.currency"
 
+    def _get_currency_table_fiscal_year_bounds(self, main_company):
+        today_fiscal_year = main_company.compute_fiscalyear_dates(fields.Date.today())
+        first_rate = self.env['res.currency.rate'].search(
+            self.env['res.currency.rate']._check_company_domain(main_company), order="name ASC", limit=1)
+        fiscal_year_bounds = []
+        if first_rate:
+            first_rate_fiscal_year = main_company.compute_fiscalyear_dates(first_rate.name)
+            fiscal_year_bounds = [(None, first_rate_fiscal_year['date_from'] - relativedelta(
+                days=1))]  # Initialized to have a value for everything before the first rate
+            for civil_year in range(first_rate_fiscal_year['date_from'].year, today_fiscal_year['date_from'].year):
+                year_delta = relativedelta(years=civil_year - first_rate_fiscal_year['date_from'].year)
+                fiscal_year_bounds.append(
+                    (first_rate_fiscal_year['date_from'] + year_delta, first_rate_fiscal_year['date_to'] + year_delta))
+
+        # The current fiscal year is not closed yet, so we need to use its rates for everything after it
+        fiscal_year_bounds.append((today_fiscal_year['date_from'], None))
+
+        return fiscal_year_bounds
+
+    def _base_get_table_builder_closing(self, period_key, main_company, other_companies, date_to,
+                                        main_company_unit_factor) -> SQL:
+        fiscal_year_bounds = self._get_currency_table_fiscal_year_bounds(main_company)
+
+        return SQL(
+            """
+            SELECT DISTINCT
+            ON (other_company.id, fiscal_year_bounds.date_from, fiscal_year_bounds.date_to)
+                other_company.id,
+                %(period_key)s,
+                fiscal_year_bounds.date_from,
+                CAST (fiscal_year_bounds.date_to:: TIMESTAMP + INTERVAL '1' DAY AS DATE),
+                'closing',
+                CASE WHEN rate.id IS NOT NULL THEN %(main_company_unit_factor)s / rate.rate ELSE 1
+            END
+                FROM res_company other_company
+                LEFT JOIN res_currency_rate rate
+                    ON rate.currency_id = other_company.currency_id
+                    AND rate.name <=
+            %(date_to)s
+            AND
+            rate
+            .
+            company_id
+            =
+            %(main_company_id)s
+            JOIN
+            (
+            VALUES
+            %(fiscal_year_bounds_values)s
+            )
+            AS
+            fiscal_year_bounds
+            (
+            date_from,
+            date_to
+            )
+            ON
+            fiscal_year_bounds
+            .
+            date_to
+            IS
+            NULL
+            OR
+            fiscal_year_bounds
+            .
+            date_to
+            >=
+            rate
+            .
+            name
+            WHERE
+            other_company
+            .
+            id
+            IN
+            %(other_company_ids)s
+            ORDER
+            BY
+            other_company
+            .
+            id,
+            fiscal_year_bounds
+            .
+            date_from,
+            fiscal_year_bounds
+            .
+            date_to,
+            rate
+            .
+            name
+            DESC
+            """,
+            period_key=period_key,
+            main_company_id=main_company.root_id.id,
+            fiscal_year_bounds_values=SQL(",").join(
+                SQL("(%(fy_from)s::date,%(fy_to)s::date)", fy_from=fy_from, fy_to=fy_to) for fy_from, fy_to in
+                fiscal_year_bounds),
+            other_company_ids=tuple(other_companies.ids),
+            date_to=date_to,
+            main_company_unit_factor=main_company_unit_factor,
+        )
+
     @api.model
     def _get_monocurrency_currency_table_sql(
-        self, companies, use_cta_rates=False, target_currency=None
+            self, companies, use_cta_rates=False, target_currency=None
     ):
         """
         OVERRIDE:
         Agar target_currency di gayi hai, toh rates uske hisaab se banayein.
         """
         if (
-            not target_currency
-            or not companies
-            or target_currency == companies.currency_id
+                not target_currency
+                or not companies
+                or target_currency == companies.currency_id
         ):
             return super()._get_monocurrency_currency_table_sql(
                 companies, use_cta_rates=use_cta_rates
@@ -140,18 +242,22 @@ class ResCurrency(models.Model):
         self._cr.execute(
             SQL(
                 """
-            DROP TABLE IF EXISTS account_currency_table;
+                DROP TABLE IF EXISTS account_currency_table;
 
-            CREATE TEMPORARY TABLE account_currency_table
+                CREATE
+                TEMPORARY TABLE account_currency_table
             (company_id, period_key, date_from, date_next, rate_type, rate)
             ON COMMIT DROP
-            AS (%(currency_table_build_query)s);
+                AS (
+                %(currency_table_build_query)s
+                );
 
-            CREATE INDEX account_currency_table_index
-                ON account_currency_table (company_id, rate_type, date_from, date_next);
+                CREATE INDEX account_currency_table_index
+                    ON account_currency_table (company_id, rate_type, date_from, date_next);
 
-            ANALYZE account_currency_table;
-            """,
+                ANALYZE
+                account_currency_table;
+                """,
                 currency_table_build_query=SQL(" UNION ALL ").join(
                     SQL("(%s)", builder) for builder in table_builders
                 ),
@@ -184,12 +290,12 @@ class ResCurrency(models.Model):
         return factor
 
     def _get_table_builder_current(
-        self,
-        period_key,
-        main_company,
-        other_companies,
-        date_to,
-        main_company_unit_factor,
+            self,
+            period_key,
+            main_company,
+            other_companies,
+            date_to,
+            main_company_unit_factor,
     ):
         """Correct 'current' rate builder — works for custom target currency."""
         forced_currency_id = self.env.context.get("custom_currency_id")
@@ -217,25 +323,24 @@ class ResCurrency(models.Model):
             )
         return SQL(
             """
-                SELECT * FROM (VALUES
-                    %(vals)s
-                ) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
-                """,
+            SELECT *
+            FROM (VALUES
+                      %(vals)s) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
+            """,
             vals=SQL(",").join(company_rates),
         )
 
     def _get_table_builder_closing(
-        self,
-        period_key,
-        main_company,
-        other_companies,
-        date_to,
-        main_company_unit_factor,
+            self,
+            period_key,
+            main_company,
+            other_companies,
+            date_to,
+            main_company_unit_factor,
     ):
         forced_currency_id = self.env.context.get("custom_currency_id")
-
         if not forced_currency_id:
-            return super()._get_table_builder_closing(
+            return self._base_get_table_builder_closing(
                 period_key,
                 main_company,
                 other_companies,
@@ -243,51 +348,51 @@ class ResCurrency(models.Model):
                 main_company_unit_factor,
             )
 
-        target_currency = self.env["res.currency"].browse(forced_currency_id)
-        target_rate = target_currency._get_rates(main_company, date_to)[
-            target_currency.id
-        ]
+        if forced_currency_id:
+            target_currency = self.env["res.currency"].browse(forced_currency_id)
+            target_rate = target_currency._get_rates(main_company, date_to)[
+                target_currency.id
+            ]
 
-        company_rows = []
+            company_rows = []
 
-        fiscal_year_bounds = self._get_currency_table_fiscal_year_bounds(main_company)
+            fiscal_year_bounds = self._get_currency_table_fiscal_year_bounds(main_company)
 
-        for comp in other_companies:
-            comp_rate = comp.currency_id._get_rates(comp, date_to)[comp.currency_id.id]
-            conversion_rate = target_rate / comp_rate
+            for comp in other_companies:
+                comp_rate = comp.currency_id._get_rates(comp, date_to)[comp.currency_id.id]
+                conversion_rate = target_rate / comp_rate
 
-            for fy_from, fy_to in fiscal_year_bounds:
-                company_rows.append(
-                    SQL(
-                        "(%(cid)s, %(pkey)s, %(fy_from)s, %(fy_to)s, 'closing', %(rate)s)",
-                        cid=comp.id,
-                        pkey=period_key,
-                        fy_from=fy_from,
-                        fy_to=fy_to,
-                        rate=conversion_rate,
+                for fy_from, fy_to in fiscal_year_bounds:
+                    company_rows.append(
+                        SQL(
+                            "(%(cid)s, %(pkey)s, %(fy_from)s, %(fy_to)s, 'closing', %(rate)s)",
+                            cid=comp.id,
+                            pkey=period_key,
+                            fy_from=fy_from,
+                            fy_to=fy_to,
+                            rate=conversion_rate,
+                        )
                     )
-                )
 
-        if not company_rows:
-            return SQL("SELECT 1 WHERE false")
+            if not company_rows:
+                return SQL("SELECT 1 WHERE false")
 
-        return SQL(
-            """
+            return SQL(
+                """
                 SELECT *
                 FROM (VALUES
-                    %(values)s
-                ) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
-            """,
-            values=SQL(", ").join(company_rows),
-        )
+                          %(values)s) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
+                """,
+                values=SQL(", ").join(company_rows),
+            )
 
     def _get_table_builder_historical(
-        self,
-        main_company,
-        other_companies,
-        date_to,
-        main_company_unit_factor,
-        date_exclude,
+            self,
+            main_company,
+            other_companies,
+            date_to,
+            main_company_unit_factor,
+            date_exclude,
     ):
         forced_currency_id = self.env.context.get("custom_currency_id")
         if not forced_currency_id:
@@ -335,22 +440,21 @@ class ResCurrency(models.Model):
 
         return SQL(
             """
-                SELECT *
-                FROM (VALUES
-                    %(values)s
-                ) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
+            SELECT *
+            FROM (VALUES
+                      %(values)s) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
             """,
             values=SQL(", ").join(rows),
         )
 
     def _get_table_builder_average(
-        self,
-        period_key,
-        main_company,
-        other_companies,
-        date_from,
-        date_to,
-        main_company_unit_factor,
+            self,
+            period_key,
+            main_company,
+            other_companies,
+            date_from,
+            date_to,
+            main_company_unit_factor,
     ):
         forced_currency_id = self.env.context.get("custom_currency_id")
 
@@ -391,8 +495,8 @@ class ResCurrency(models.Model):
                 )
 
                 days = (
-                    fields.Date.from_string(next_date)
-                    - fields.Date.from_string(rate.name)
+                        fields.Date.from_string(next_date)
+                        - fields.Date.from_string(rate.name)
                 ).days
                 total_days += days
 
@@ -420,10 +524,9 @@ class ResCurrency(models.Model):
 
         return SQL(
             """
-                SELECT *
-                FROM (VALUES
-                    %(values)s
-                ) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
+            SELECT *
+            FROM (VALUES
+                      %(values)s) AS t(company_id, period_key, date_from, date_next, rate_type, rate)
             """,
             values=SQL(", ").join(rows),
         )

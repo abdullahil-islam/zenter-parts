@@ -2,6 +2,7 @@
 
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+from odoo.tools import SQL, Query
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -12,6 +13,65 @@ class AccountAccount(models.Model):
 
     central_account_name = fields.Char(string="Central Account Name")
     central_acc_code = fields.Char(string="Central Account Code")
+
+    @api.depends_context('company')
+    @api.depends('code')
+    def _compute_account_group(self):
+        accounts_with_code = self.filtered(lambda a: a.code)
+        (self - accounts_with_code).group_id = False
+
+        if not accounts_with_code:
+            return
+
+        codes = accounts_with_code.mapped('code')
+        root_company_id = self.env.company.root_id.id
+
+        # Step 1: Find explicit matches
+        explicit_groups = self.env['account.group'].search([
+            ('company_id', '=', root_company_id),
+            ('explicit_account_codes', '!=', False),
+        ])
+
+        explicit_match = {}
+        for group in explicit_groups:
+            group_codes = [
+                code.strip()
+                for code in group.explicit_account_codes.split(',')
+                if code.strip()
+            ]
+            for code in codes:
+                if code in group_codes:
+                    explicit_match[code] = group.id
+
+        # Step 2: For remaining codes, use prefix range matching
+        remaining_codes = [code for code in codes if code not in explicit_match]
+        prefix_match = {}
+
+        if remaining_codes:
+            account_code_values = SQL(','.join(['(%s)'] * len(remaining_codes)), *remaining_codes)
+            results = self.env.execute_query(SQL(
+                """
+                SELECT DISTINCT
+                ON (account_code.code)
+                    account_code.code,
+                    agroup.id AS group_id
+                FROM (VALUES %(account_code_values)s) AS account_code (code)
+                    LEFT JOIN account_group agroup
+                ON agroup.code_prefix_start <= LEFT (account_code.code, char_length (agroup.code_prefix_start))
+                    AND agroup.code_prefix_end >= LEFT (account_code.code, char_length (agroup.code_prefix_end))
+                    AND agroup.company_id = %(root_company_id)s
+                ORDER BY account_code.code, char_length (agroup.code_prefix_start) DESC, agroup.id
+                """,
+                account_code_values=account_code_values,
+                root_company_id=root_company_id,
+            ))
+            prefix_match = dict(results)
+
+        # Step 3: Merge results (explicit takes priority)
+        group_by_code = {**prefix_match, **explicit_match}
+
+        for account in accounts_with_code:
+            account.group_id = group_by_code.get(account.code, False)
 
 
 class AccountMoveLine(models.Model):

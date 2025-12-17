@@ -13,13 +13,13 @@ class SaleOrderLine(models.Model):
         digits='Product Unit of Measure',
         help='Quantity remaining in backorder deliveries'
     )
-    can_edit_discount = fields.Boolean(compute='_compute_can_edit_discount')
+    can_edit_discount = fields.Boolean(related='order_id.can_edit_discount')
 
-    def _compute_can_edit_discount(self):
-        for rec in self:
-            allowed_groups = ['bista_expense_management.group_md', 'bista_expense_management.group_fd', 'base.group_system', ]
-            rec.can_edit_discount = any(self.env.user.has_group(group) for group in allowed_groups)
-            # rec.can_edit_discount = False
+    # def _compute_can_edit_discount(self):
+    #     for rec in self:
+    #         allowed_groups = ['bista_expense_management.group_md', 'bista_expense_management.group_fd', 'base.group_system', ]
+    #         rec.can_edit_discount = any(self.env.user.has_group(group) for group in allowed_groups)
+    #         # rec.can_edit_discount = False
 
     @api.depends('move_ids', 'move_ids.state', 'move_ids.product_uom_qty', 
                  'move_ids.picking_id', 'move_ids.picking_id.backorder_id',

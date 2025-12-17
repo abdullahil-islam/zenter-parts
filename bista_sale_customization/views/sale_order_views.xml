@@ -18,6 +18,14 @@
                 <xpath expr="//field[@name='order_line']/list/field[@name='discount']" position="attributes">
                     <attribute name="readonly">not can_edit_discount</attribute>
                 </xpath>
+
+                <button name="action_open_discount_wizard" position="before">
+                    <field name="can_edit_discount" invisible="1"/>
+                </button>
+
+                <button name="action_open_discount_wizard" position="attributes">
+                    <attribute name="invisible">not can_edit_discount</attribute>
+                </button>
                 
             </field>
         </record>

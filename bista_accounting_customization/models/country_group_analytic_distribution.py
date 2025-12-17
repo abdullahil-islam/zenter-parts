@@ -61,6 +61,57 @@ class CountryGroupAnalyticDistribution(models.Model):
 
         return mapping.analytic_distribution if mapping else {}
 
+    def action_syc_country_analytics(self):
+        Country = self.env['res.country']
+        CountryGroup = self.env['res.country.group']
+        AnalyticPlan = self.env['account.analytic.plan']
+        AnalyticAccount = self.env['account.analytic.account']
+
+        # Get eligible plans
+        country_plan = AnalyticPlan.search([('is_eligible_country', '=', True)], limit=1)
+        region_plan = AnalyticPlan.search([('is_eligible_region', '=', True)], limit=1)
+        if not country_plan:
+            raise UserError("No analytic plan is marked as 'Eligible for Country'. Please configure one first.")
+
+        if not region_plan:
+            raise UserError("No analytic plan is marked as 'Eligible for Region'. Please configure one first.")
+
+        # Pre-fetch all analytic accounts for performance
+        country_analytics = {
+            aa.name: aa.id
+            for aa in AnalyticAccount.search([('plan_id', '=', country_plan.id)])
+        }
+        region_analytics = {
+            aa.name: aa.id
+            for aa in AnalyticAccount.search([('plan_id', '=', region_plan.id)])
+        }
+
+        countries = Country.search([])
+        regions = CountryGroup.search([])
+        analytic_acc_val_list = []
+        for country in countries:
+            if not country_analytics.get(country.name, False):
+                analytic_acc_val_list.append({
+                    'plan_id': country_plan.id,
+                    'name': country.name
+                })
+        for region in regions:
+            if not region_analytics.get(region.name, False):
+                analytic_acc_val_list.append({
+                    'plan_id': region_plan.id,
+                    'name': region.name
+                })
+        if analytic_acc_val_list:
+            recs = AnalyticAccount.create(analytic_acc_val_list) if analytic_acc_val_list else AnalyticAccount
+
+        return {
+            'success': {
+                'title': _("Success"),
+                'message': _('Success'),
+            }
+        }
+
+
     def action_automatic_entry(self):
         # Bulk create Country Analytic Distribution records
         # Links each country to its analytic account + all its country groups' analytic accounts
@@ -121,16 +172,22 @@ class CountryGroupAnalyticDistribution(models.Model):
             analytic_distribution = {}
 
             # 1. Add country's analytic account
+            str_analytic_ids = ''
             country_analytic_id = country_analytics.get(country.name)
             if country_analytic_id:
-                analytic_distribution[str(country_analytic_id)] = 100
+                str_analytic_ids = str(country_analytic_id)
 
             # 2. Add all country groups' analytic accounts
             group_names = country_to_groups.get(country.id, [])
+            first_group_added = False
             for group_name in group_names:
                 region_analytic_id = region_analytics.get(group_name)
-                if region_analytic_id:
+                if region_analytic_id and not first_group_added:
+                    str_analytic_ids += ',' + str(region_analytic_id)
+                    first_group_added = True
+                elif region_analytic_id:
                     analytic_distribution[str(region_analytic_id)] = 100
+            analytic_distribution[str(str_analytic_ids)] = 100
 
             # Only create if we have at least the country analytic
             if not analytic_distribution:

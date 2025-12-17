@@ -36,8 +36,8 @@
         'views/product_category_views.xml',
         'views/res_users_views.xml',
         'views/hr_department_views.xml',
+        'views/account_group_views.xml',
         'views/country_group_analytic_distribution_views.xml',
-        # 'views/res_country_group_views.xml',
     ],
 
     'assets': {
